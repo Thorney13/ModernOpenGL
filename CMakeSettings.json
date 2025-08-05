@@ -7,9 +7,8 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeToolchain": "C:/Users/max41/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cmakeCommandArgs": "-DVCPKG_TARGET_TRIPLET=x64-windows"
+
     }
   ]
 }
-
