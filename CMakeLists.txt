@@ -19,7 +19,7 @@ include_directories(${GLFW3_INCLUDE_DIRS})
 #include_directories(include)
 
 # Add the source files
-add_executable(ModernOpenGL	src/main.cpp)
+add_executable(ModernOpenGL	src/main.cpp "src/utils/fileUtils.h" "src/utils/fileUtils.cpp")
 
 # Link the OpenGL and GLFW libraries
 target_link_libraries(ModernOpenGL PRIVATE glad::glad glfw OpenGL::GL)

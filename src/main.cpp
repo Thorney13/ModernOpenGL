@@ -1,22 +1,7 @@
 #include <glad/glad.h>
-//#define GLFW_INCLUDE_NONE
+#include "utils/fileUtils.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-
-std::string get_file_contents(const char* filename)
-{
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open file: " + std::string(filename));
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
-}
 
 // Callback to resize viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -109,7 +94,7 @@ int main() {
     // Fragment Shader source
     const char* fragmentShaderSource = fragmentShaderSourceStr.c_str();
 
-	// Uncomment to print shader sources for debugging
+	// Print shader sources for debugging
     //std::cout << "Vertex Shader:\n" << vertexShaderSourceStr << std::endl;
     //std::cout << "Fragment Shader:\n" << fragmentShaderSourceStr << std::endl;
 
