@@ -2,31 +2,21 @@
 //#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
-// Vertex Shader source
-const char* vertexShaderSource = R"(
-    #version 330 core
-    layout(location = 0) in vec3 aPos;
-    layout(location = 1) in vec3 aColor;
-
-    out vec3 vertexColor;
-
-    void main() {
-        gl_Position = vec4(aPos, 1.0);
-        vertexColor = aColor;
+std::string get_file_contents(const char* filename)
+{
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open file: " + std::string(filename));
     }
-)";
 
-// Fragment Shader source
-const char* fragmentShaderSource = R"(
-    #version 330 core
-    in vec3 vertexColor;
-    out vec4 FragColor;
-
-    void main() {
-        FragColor = vec4(vertexColor, 1.0);  // Orange
-    }
-)";
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
 
 // Callback to resize viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -110,6 +100,18 @@ int main() {
     // Unbind for safety
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    std::string vertexShaderSourceStr = get_file_contents("../../../src/shaders/vertexShader.vert");
+    std::string fragmentShaderSourceStr = get_file_contents("../../../src/shaders/fragmentShader.frag");
+    // Vertex Shader source
+    const char* vertexShaderSource = vertexShaderSourceStr.c_str();
+
+    // Fragment Shader source
+    const char* fragmentShaderSource = fragmentShaderSourceStr.c_str();
+
+	// Uncomment to print shader sources for debugging
+    //std::cout << "Vertex Shader:\n" << vertexShaderSourceStr << std::endl;
+    //std::cout << "Fragment Shader:\n" << fragmentShaderSourceStr << std::endl;
 
     // Compile vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);

@@ -23,5 +23,3 @@ add_executable(ModernOpenGL	src/main.cpp)
 
 # Link the OpenGL and GLFW libraries
 target_link_libraries(ModernOpenGL PRIVATE glad::glad glfw OpenGL::GL)
-
-
