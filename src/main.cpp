@@ -93,7 +93,7 @@ int main() {
     glBindVertexArray(0);
 
     const std::string vertexShaderSourceStr = get_file_contents("../../../src/shaders/vertexShader.vert");
-    const std::string fragmentShaderSourceStr = get_file_contents("../../../src/shaders/fragmentShader.frag");
+    const std::string fragmentShaderSourceStr = get_file_contents("../../../src/shaders/potentiometerShader.frag");
     // Vertex Shader source
     const GLchar* vertexShaderSource = vertexShaderSourceStr.c_str();
 
@@ -121,7 +121,7 @@ int main() {
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
-    GLuint uStateLoc = glGetUniformLocation(shaderProgram, "u_State");
+    GLfloat uStateLoc = glGetUniformLocation(shaderProgram, "u_State");
     checkShaderCompile(shaderProgram, "PROGRAM");
 
     // Delete shaders after linking
@@ -133,7 +133,9 @@ int main() {
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
-        GLuint state = arduino.readState();
+        //GLuint state = arduino.readState();
+        GLfloat potValue = arduino.readPot();
+        std::cout << "Arduino state: " << potValue << std::endl;
         //std::cout << "Arduino state: " << state << std::endl;
  
         // Input
@@ -146,7 +148,7 @@ int main() {
 
         // Draw triangle
         glUseProgram(shaderProgram);
-        glUniform1i(uStateLoc, state);
+        glUniform1f(uStateLoc, potValue);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
