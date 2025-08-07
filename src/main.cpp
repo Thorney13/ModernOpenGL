@@ -1,6 +1,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "serialPort.h"
 
 #include "utils/arduinoController.h"
@@ -8,6 +12,21 @@
 
 const char* portName = "\\\\.\\COM3"; // If your device is on COM4
 ArduinoController arduino(portName);
+
+glm::mat4 model = glm::mat4(1.0f); // Identity matrix for model transformation
+glm::mat4 view = glm::lookAt(
+    glm::vec3(0.0f, 0.0f, 10.0f), // Camera position
+    glm::vec3(0.0f, 0.0f, 0.0f), // Look at the origin
+    glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
+);
+glm::mat4 projection = glm::perspective(
+    glm::radians(45.0f), // Field of view
+    800.0f / 600.0f,     // Aspect ratio
+    0.1f,                // Near plane
+    100.0f               // Far plane
+);
+
+glm::mat4 mvp = projection * view * model;
 
 // Callback to resize viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -122,6 +141,7 @@ int main() {
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
     GLfloat uStateLoc = glGetUniformLocation(shaderProgram, "u_State");
+    GLuint MatrixID = glGetUniformLocation(shaderProgram, "mvp");
     checkShaderCompile(shaderProgram, "PROGRAM");
 
     // Delete shaders after linking
@@ -134,9 +154,9 @@ int main() {
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         //GLuint state = arduino.readState();
-        GLfloat potValue = arduino.readPot();
-        std::cout << "Arduino state: " << potValue << std::endl;
         //std::cout << "Arduino state: " << state << std::endl;
+
+        GLfloat potValue = arduino.readPot();
  
         // Input
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -149,6 +169,7 @@ int main() {
         // Draw triangle
         glUseProgram(shaderProgram);
         glUniform1f(uStateLoc, potValue);
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(mvp));
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
