@@ -10,8 +10,11 @@
 #include "utils/arduinoController.h"
 #include "utils/fileUtils.h"
 
-const char* portName = "\\\\.\\COM3"; // If your device is on COM4
-ArduinoController arduino(portName);
+//const char* portName = "\\\\.\\COM3"; // If your device is on COM4
+//ArduinoController arduino(portName);
+
+int windowWidth = 800;
+int windowHeight = 600;
 
 glm::mat4 model = glm::mat4(1.0f); // Identity matrix for model transformation
 glm::mat4 view = glm::lookAt(
@@ -21,7 +24,7 @@ glm::mat4 view = glm::lookAt(
 );
 glm::mat4 projection = glm::perspective(
     glm::radians(45.0f), // Field of view
-    800.0f / 600.0f,     // Aspect ratio
+    (float)windowWidth / (float)windowHeight, // Aspect ratio
     0.1f,                // Near plane
     100.0f               // Far plane
 );
@@ -31,6 +34,20 @@ glm::mat4 mvp = projection * view * model;
 // Callback to resize viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+
+	windowWidth = width;
+    windowHeight = height;
+
+    // Recalculate projection matrix with new aspect ratio
+    projection = glm::perspective(
+        glm::radians(45.0f),
+        (float)width / (float)height,
+        0.1f,
+        100.0f
+    );
+
+    // Recalculate MVP matrix
+    mvp = projection * view * model;
 }
 
 // Error-checking function
@@ -112,7 +129,7 @@ int main() {
     glBindVertexArray(0);
 
     const std::string vertexShaderSourceStr = get_file_contents("../../../src/shaders/vertexShader.vert");
-    const std::string fragmentShaderSourceStr = get_file_contents("../../../src/shaders/potentiometerShader.frag");
+    const std::string fragmentShaderSourceStr = get_file_contents("../../../src/shaders/fragmentShader.frag");
     // Vertex Shader source
     const GLchar* vertexShaderSource = vertexShaderSourceStr.c_str();
 
@@ -156,7 +173,7 @@ int main() {
         //GLuint state = arduino.readState();
         //std::cout << "Arduino state: " << state << std::endl;
 
-        GLfloat potValue = arduino.readPot();
+        //GLfloat potValue = arduino.readPot();
  
         // Input
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -168,7 +185,7 @@ int main() {
 
         // Draw triangle
         glUseProgram(shaderProgram);
-        glUniform1f(uStateLoc, potValue);
+        //glUniform1f(uStateLoc, potValue);
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(mvp));
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
