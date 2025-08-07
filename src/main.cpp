@@ -1,11 +1,13 @@
 #include <glad/glad.h>
-#include "utils/fileUtils.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include "utils/serialPort.h"
+#include "serialPort.h"
+
+#include "utils/arduinoController.h"
+#include "utils/fileUtils.h"
 
 const char* portName = "\\\\.\\COM3"; // If your device is on COM4
-SerialPort arduino(portName);
+ArduinoController arduino(portName);
 
 // Callback to resize viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -62,7 +64,7 @@ int main() {
     }
 
     // Define triangle vertices
-    float vertices[] = {
+    GLfloat vertices[] = {
          0.0f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // top
         -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
          0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f // bottom right
@@ -90,13 +92,13 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    std::string vertexShaderSourceStr = get_file_contents("../../../src/shaders/vertexShader.vert");
-    std::string fragmentShaderSourceStr = get_file_contents("../../../src/shaders/fragmentShader.frag");
+    const std::string vertexShaderSourceStr = get_file_contents("../../../src/shaders/vertexShader.vert");
+    const std::string fragmentShaderSourceStr = get_file_contents("../../../src/shaders/fragmentShader.frag");
     // Vertex Shader source
-    const char* vertexShaderSource = vertexShaderSourceStr.c_str();
+    const GLchar* vertexShaderSource = vertexShaderSourceStr.c_str();
 
     // Fragment Shader source
-    const char* fragmentShaderSource = fragmentShaderSourceStr.c_str();
+    const GLchar* fragmentShaderSource = fragmentShaderSourceStr.c_str();
 
 	// Print shader sources for debugging
     //std::cout << "Vertex Shader:\n" << vertexShaderSourceStr << std::endl;
@@ -119,7 +121,7 @@ int main() {
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
-    GLint uStateLoc = glGetUniformLocation(shaderProgram, "u_State");
+    GLuint uStateLoc = glGetUniformLocation(shaderProgram, "u_State");
     checkShaderCompile(shaderProgram, "PROGRAM");
 
     // Delete shaders after linking
@@ -127,21 +129,13 @@ int main() {
     glDeleteShader(fragmentShader);
 
     // Serial buffer
-    char buffer[2];
-    int state = 0;
+    GLchar buffer[2];
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
-
-        // Serial read
-        int n = arduino.readSerialPort(buffer, 1);
-        if (n > 0) {
-            buffer[n] = '\0';
-            std::cout << "Received: " << buffer[0] << std::endl;
-            if (buffer[0] == '1') state = 1;
-            else if (buffer[0] == '0') state = 0;
-        }
-
+        GLuint state = arduino.readState();
+        //std::cout << "Arduino state: " << state << std::endl;
+ 
         // Input
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);

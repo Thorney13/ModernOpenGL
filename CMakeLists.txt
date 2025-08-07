@@ -16,10 +16,21 @@ find_package(glad REQUIRED)
 # Include directories for OpenGL and GLFW
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${GLFW3_INCLUDE_DIRS})
-#include_directories(include)
 
 # Add the source files
-add_executable(ModernOpenGL	src/main.cpp "src/utils/fileUtils.h" "src/utils/fileUtils.cpp" "src/utils/serialPort.h"   "src/utils/serialPort.cpp")
+add_executable(ModernOpenGL
+    src/main.cpp
+    src/utils/fileUtils.h
+    src/utils/fileUtils.cpp
+    external/serialPort/serialPort.h
+    external/serialPort/serialPort.cpp
+ "src/utils/arudinoController.cpp")
+
+# Now set include directories for your target
+target_include_directories(ModernOpenGL PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/serialPort
+)
 
 # Link the OpenGL and GLFW libraries
 target_link_libraries(ModernOpenGL PRIVATE glad::glad glfw OpenGL::GL)
