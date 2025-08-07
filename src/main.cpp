@@ -2,6 +2,10 @@
 #include "utils/fileUtils.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include "utils/serialPort.h"
+
+const char* portName = "\\\\.\\COM3"; // If your device is on COM4
+SerialPort arduino(portName);
 
 // Callback to resize viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -65,7 +69,7 @@ int main() {
     };
 
     // Generate VAO and VBO
-    unsigned int VAO, VBO;
+    GLuint VAO, VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
@@ -115,14 +119,29 @@ int main() {
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    GLint uStateLoc = glGetUniformLocation(shaderProgram, "u_State");
     checkShaderCompile(shaderProgram, "PROGRAM");
 
     // Delete shaders after linking
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
+    // Serial buffer
+    char buffer[2];
+    int state = 0;
+
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+
+        // Serial read
+        int n = arduino.readSerialPort(buffer, 1);
+        if (n > 0) {
+            buffer[n] = '\0';
+            std::cout << "Received: " << buffer[0] << std::endl;
+            if (buffer[0] == '1') state = 1;
+            else if (buffer[0] == '0') state = 0;
+        }
+
         // Input
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
@@ -133,6 +152,7 @@ int main() {
 
         // Draw triangle
         glUseProgram(shaderProgram);
+        glUniform1i(uStateLoc, state);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
