@@ -3,6 +3,7 @@
 #include "utils/textureUtils.h"
 #include "utils/inputUtils.h"
 #include "utils/cameraUtils.h"
+#include "meshes/cubeData.h"
 
 //const char* portName = "\\\\.\\COM3"; // If your device is on COM4
 //ArduinoController arduino(portName);
@@ -95,59 +96,6 @@ int main() {
 	glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D rendering
     glDepthFunc(GL_LESS);
 
-    static const GLfloat vertices[] = {
-        // Front face (red)
-        -0.5f, -0.5f,  0.5f,  1.f, 0.f, 0.f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.f, 0.f, 0.f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.f, 0.f, 0.f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  1.f, 0.f, 0.f,  0.0f, 1.0f,
-
-        // Back face (green)
-        -0.5f, -0.5f, -0.5f,  0.f, 1.f, 0.f,  1.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  0.f, 1.f, 0.f,  0.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  0.f, 1.f, 0.f,  0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.f, 1.f, 0.f,  1.0f, 1.0f,
-
-        // Left face (blue)
-        -0.5f, -0.5f, -0.5f,  0.f, 0.f, 1.f,  0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.f, 0.f, 1.f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.f, 0.f, 1.f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.f, 0.f, 1.f,  0.0f, 1.0f,
-
-        // Right face (yellow)
-         0.5f, -0.5f,  0.5f,  1.f, 1.f, 0.f,  1.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.f, 1.f, 0.f,  0.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.f, 1.f, 0.f,  0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.f, 1.f, 0.f,  1.0f, 1.0f,
-
-         // Top face (magenta)
-         -0.5f,  0.5f,  0.5f,  1.f, 0.f, 1.f,  0.0f, 0.0f,
-          0.5f,  0.5f,  0.5f,  1.f, 0.f, 1.f,  1.0f, 0.0f,
-          0.5f,  0.5f, -0.5f,  1.f, 0.f, 1.f,  1.0f, 1.0f,
-         -0.5f,  0.5f, -0.5f,  1.f, 0.f, 1.f,  0.0f, 1.0f,
-         // Bottom face (cyan)
-         -0.5f, -0.5f,  0.5f,  0.f, 1.f, 1.f,  1.0f, 1.0f,
-          0.5f, -0.5f,  0.5f,  0.f, 1.f, 1.f,  0.0f, 1.0f,
-          0.5f, -0.5f, -0.5f,  0.f, 1.f, 1.f,  0.0f, 0.0f,
-         -0.5f, -0.5f, -0.5f,  0.f, 1.f, 1.f,  1.0f, 0.0f
-    };
-
-    // Define indices for 12 triangles (6 faces)
-    static const GLuint indices[] = {
-         // Front face
-         0,  1,  2,  2,  3,  0,
-         // Back face
-         4,  5,  6,  6,  7,  4,
-         // Left face
-         8,  9, 10, 10, 11,  8,
-         // Right face
-         12, 13, 14, 14, 15, 12,
-         // Top face
-         16, 17, 18, 18, 19, 16,
-         // Bottom face
-         20, 21, 22, 22, 23, 20
-    };
-
     // Generate VAO, VBO and EBO
     GLuint VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -157,9 +105,9 @@ int main() {
     // Bind VAO then VBO and upload data
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
 
     // Vertex attribute layout
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
