@@ -1,48 +1,18 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include <vector>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
-#include "serialPort.h"
-
 #include "utils/arduinoController.h"
 #include "utils/fileUtils.h"
 #include "utils/textureUtils.h"
+#include "utils/inputUtils.h"
+#include "utils/cameraUtils.h"
 
 //const char* portName = "\\\\.\\COM3"; // If your device is on COM4
 //ArduinoController arduino(portName);
 
-float deltaTime = 0.0f; // Time between current frame and last frame
-float lastFrame = 0.0f; // Time of last frame
-
-bool firstMouse = true;
-bool rightMousePressed = false;
-double lastX, lastY;
-
-float yaw = -90.0f; // Yaw angle
-float pitch = 0.0f; // Pitch angle
-float sensitivity = 0.1f; // Mouse sensitivity
-
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f); // Camera position
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // Camera front vector
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); // Camera up vector
-
 int windowWidth = 800;
 int windowHeight = 600;
-float fov = glm::radians(45.0f); // Field of view in radians
-float nearPlane = 0.1f; // Near clipping plane
-float farPlane = 100.0f; // Far clipping plane
 
 glm::mat4 model = glm::mat4(1.0f); // Identity matrix for model transformation
-glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+glm::mat4 view = getViewMatrix(); // Get initial view matrix from cameraUtils
 glm::mat4 projection = glm::perspective(fov, (float)windowWidth / (float)windowHeight, nearPlane, farPlane);
-
 glm::mat4 mvp = projection * view * model;
 
 void  updateDeltaTime() {
@@ -88,69 +58,6 @@ void checkShaderCompile(GLuint shader, const std::string& type) {
             std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n";
         }
     }
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        rightMousePressed = true;
-        firstMouse = true; // Reset first mouse flag when right button is pressed
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide cursor and capture mouse movement
-    }
-    else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
-        rightMousePressed = false;
-
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Reset cursor mode
-    }
-}
-
-void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (!rightMousePressed) return; // Only process if right mouse button is pressed
-
-    if (firstMouse) {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false; // Reset first mouse flag
-        return;
-    }
-
-    float xoffset = float(xpos - lastX) * sensitivity;
-    float yoffset = float(lastY - ypos) * sensitivity; // Invert y-axis for natural movement
-
-    lastX = xpos;
-    lastY = ypos;
-
-    yaw += xoffset; // Update yaw based on mouse movement
-    pitch += yoffset; // Update pitch based on mouse movement
-    pitch = glm::clamp(pitch, -89.0f, 89.0f); // Clamp pitch to avoid gimbal lock
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction); // Update camera front vector
-
-}
-
-void processInput(GLFWwindow* window) {
-	float cameraSpeed = 2.5f * deltaTime; // Speed of camera movement
-
-    // Forward / Back
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		cameraPos += cameraFront * cameraSpeed;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		cameraPos -= cameraFront * cameraSpeed;
-
-    // Left / Right
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; 
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-
-    // Up / Down
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        cameraPos += cameraUp * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        cameraPos -= cameraUp * cameraSpeed;
 }
 
 int main() {
@@ -338,7 +245,7 @@ int main() {
 		float rotationSpeed = 0.5f; // Speed of rotation
 		float rotationAngle = rotationSpeed * currentTime; // Increment rotation angle
 		model = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(1.0f, 1.0f, 1.0f)); // Rotate around Y-axis
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp); // Update view matrix based on camera position and direction
+        view = getViewMatrix(); // Update view matrix based on camera position and direction
 		projection = glm::perspective(fov, (float)windowWidth / (float)windowHeight, nearPlane, farPlane); // Update projection matrix
 		mvp = projection * view * model; // Update MVP matrix
 

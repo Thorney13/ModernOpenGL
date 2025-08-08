@@ -20,11 +20,13 @@ include_directories(${GLFW3_INCLUDE_DIRS})
 # Add the source files
 add_executable(ModernOpenGL
     src/main.cpp
-    src/utils/fileUtils.h
     src/utils/fileUtils.cpp
-    external/serialPort/serialPort.h
     external/serialPort/serialPort.cpp
- "src/utils/arudinoController.cpp" "src/utils/textureUtils.h" "src/utils/textureUtils.cpp")
+    src/utils/arduinoController.cpp
+    src/utils/textureUtils.cpp
+    src/utils/inputUtils.cpp
+    src/utils/cameraUtils.cpp
+)
 
 # Now set include directories for your target
 target_include_directories(ModernOpenGL PRIVATE
