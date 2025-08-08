@@ -24,7 +24,7 @@ add_executable(ModernOpenGL
     src/utils/fileUtils.cpp
     external/serialPort/serialPort.h
     external/serialPort/serialPort.cpp
- "src/utils/arudinoController.cpp")
+ "src/utils/arudinoController.cpp" "src/utils/textureUtils.h" "src/utils/textureUtils.cpp")
 
 # Now set include directories for your target
 target_include_directories(ModernOpenGL PRIVATE

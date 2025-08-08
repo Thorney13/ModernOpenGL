@@ -13,25 +13,32 @@
 
 #include "utils/arduinoController.h"
 #include "utils/fileUtils.h"
+#include "utils/textureUtils.h"
 
 //const char* portName = "\\\\.\\COM3"; // If your device is on COM4
 //ArduinoController arduino(portName);
 
+bool firstMouse = true;
+bool rightMousePressed = false;
+double lastX, lastY;
+
+float yaw = -90.0f; // Yaw angle
+float pitch = 0.0f; // Pitch angle
+float sensitivity = 0.1f; // Mouse sensitivity
+
+glm::vec3 cameraPos = glm::vec3(4.0f, 3.0f, -3.0f); // Camera position
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, 0.0f); // Camera front vector
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f); // Camera up vector
+
 int windowWidth = 800;
 int windowHeight = 600;
+float fov = glm::radians(45.0f); // Field of view in radians
+float nearPlane = 0.1f; // Near clipping plane
+float farPlane = 100.0f; // Far clipping plane
 
 glm::mat4 model = glm::mat4(1.0f); // Identity matrix for model transformation
-glm::mat4 view = glm::lookAt(
-    glm::vec3(4.0f, 3.0f, -3.0f), // Camera position
-    glm::vec3(0.0f, 0.0f, 0.0f), // Look at the origin
-    glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
-);
-glm::mat4 projection = glm::perspective(
-    glm::radians(45.0f), // Field of view
-    (float)windowWidth / (float)windowHeight, // Aspect ratio
-    0.1f,                // Near plane
-    100.0f               // Far plane
-);
+glm::mat4 view = glm::lookAt(cameraPos, cameraFront, cameraUp);
+glm::mat4 projection = glm::perspective(fov, (float)windowWidth / (float)windowHeight, nearPlane, farPlane);
 
 glm::mat4 mvp = projection * view * model;
 
@@ -178,7 +185,6 @@ int main() {
 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
     
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
@@ -227,104 +233,12 @@ int main() {
     GLuint textureID = 0;
     
     // Function to load texture with stb_image
-    auto loadTexture = [](const std::string& path) -> GLuint {
-        GLuint textureID = 0;
-        int width, height, nrChannels;
-        
-        // Load image data
-        stbi_set_flip_vertically_on_load(true); // OpenGL expects textures to be flipped
-        unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
-        
-        if (data) {
-            std::cout << "Successfully loaded texture: " << path << std::endl;
-            std::cout << "Dimensions: " << width << "x" << height << ", Channels: " << nrChannels << std::endl;
-            
-            glGenTextures(1, &textureID);
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            
-            // Determine format based on number of channels
-            GLenum format;
-            GLenum internalFormat;
-            switch (nrChannels) {
-                case 1:
-                    format = GL_RED;
-                    internalFormat = GL_R8;
-                    break;
-                case 3:
-                    format = GL_RGB;
-                    internalFormat = GL_RGB8;
-                    break;
-                case 4:
-                    format = GL_RGBA;
-                    internalFormat = GL_RGBA8;
-                    break;
-                default:
-                    std::cerr << "Unsupported number of channels: " << nrChannels << std::endl;
-                    stbi_image_free(data);
-                    return 0;
-            }
-            
-            // Upload texture data
-            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-            
-            // Generate mipmaps
-            glGenerateMipmap(GL_TEXTURE_2D);
-            
-            // Set texture parameters
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            
-            // Clean up
-            stbi_image_free(data);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            
-            std::cout << "Texture created with ID: " << textureID << std::endl;
-        } else {
-            std::cerr << "Failed to load texture: " << path << std::endl;
-            std::cerr << "STB Error: " << stbi_failure_reason() << std::endl;
-        }
-        
-        return textureID;
-    };
-    
-    // Try to load texture from multiple possible paths and formats
-    std::vector<std::string> texturePaths = {
-        "../../../src/textures/brick_BC.png"
-    };
-    
-    for (const auto& path : texturePaths) {
-        std::cout << "Attempting to load: " << path << std::endl;
-        textureID = loadTexture(path);
-        if (textureID != 0) {
-            break;
-        }
-    }
-    
+	textureID = loadTexture("../../../src/textures/brick_BC.png");
+  
     // Create fallback texture if loading failed
-    if (textureID == 0) {
-        std::cout << "Creating fallback checkerboard texture..." << std::endl;
-        
-        // Create a simple 2x2 checkerboard pattern
-        unsigned char checkerboard[] = {
-            255, 255, 255, 255,  // White
-            0, 0, 0, 255,        // Black
-            0, 0, 0, 255,        // Black  
-            255, 255, 255, 255   // White
-        };
-        
-        glGenTextures(1, &textureID);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerboard);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        
-        std::cout << "Fallback texture created with ID: " << textureID << std::endl;
-    }
+	if (textureID == 0) {
+		textureID = createFallbackTexture();
+	}
 
     // Serial buffer
     GLchar buffer[2];
