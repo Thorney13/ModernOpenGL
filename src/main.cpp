@@ -18,7 +18,7 @@ int windowHeight = 600;
 
 glm::mat4 model = glm::mat4(1.0f); // Identity matrix for model transformation
 glm::mat4 view = glm::lookAt(
-    glm::vec3(0.0f, 0.0f, 10.0f), // Camera position
+    glm::vec3(4.0f, 3.0f, -3.0f), // Camera position
     glm::vec3(0.0f, 0.0f, 0.0f), // Look at the origin
     glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
 );
@@ -99,11 +99,57 @@ int main() {
         return -1;
     }
 
-    // Define triangle vertices
-    GLfloat vertices[] = {
-         0.0f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // top
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-         0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f // bottom right
+	glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D rendering
+    glDepthFunc(GL_LESS);
+
+    static const GLfloat vertices[] = {
+        // Front face
+        -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, // Bottom-left  (red)
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // Bottom-right (green)
+         0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // Top-right    (blue)
+         0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // Top-right    (blue)
+        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // Top-left     (yellow)
+        -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, // Bottom-left  (red)
+
+        // Back face
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // Bottom-left  (magenta)
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // Bottom-right (cyan)
+         0.5f,  0.5f, -0.5f,  0.5f, 0.5f, 0.5f, // Top-right    (gray)
+         0.5f,  0.5f, -0.5f,  0.5f, 0.5f, 0.5f, // Top-right    (gray)
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // Top-left     (white)
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // Bottom-left  (magenta)
+
+        // Left face
+        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // Top-right    (yellow)
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // Top-left     (white)
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // Bottom-left  (magenta)
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // Bottom-left  (magenta)
+        -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, // Bottom-right (red)
+        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // Top-right    (yellow)
+
+                // Right face
+         0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // Top-left     (blue)
+         0.5f,  0.5f, -0.5f,  0.5f, 0.5f, 0.5f, // Top-right    (gray)
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // Bottom-right (cyan)
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // Bottom-right (cyan)
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // Bottom-left  (green)
+         0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // Top-left     (blue)
+
+        // Bottom face
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // Top-right    (magenta)
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // Top-left     (cyan)
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // Bottom-left  (green)
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // Bottom-left  (green)
+        -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, // Bottom-right (red)
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // Top-right    (magenta)
+
+        // Top face
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // Top-left     (white)
+         0.5f,  0.5f, -0.5f,  0.5f, 0.5f, 0.5f, // Top-right    (gray)
+         0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // Bottom-right (blue)
+         0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // Bottom-right (blue)
+        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // Bottom-left  (yellow)
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f  // Top-left     (white)
     };
 
     // Generate VAO and VBO
@@ -181,14 +227,20 @@ int main() {
 
         // Rendering commands
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		float currentTime = (float)glfwGetTime();
+		float rotationSpeed = 0.5f; // Speed of rotation
+		float rotationAngle = rotationSpeed * currentTime; // Increment rotation angle
+		model = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(1.0f, 1.0f, 1.0f)); // Rotate around Y-axis
+		mvp = projection * view * model; // Update MVP matrix
 
         // Draw triangle
         glUseProgram(shaderProgram);
         //glUniform1f(uStateLoc, potValue);
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(mvp));
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 12*3);
 
         // Swap buffers and poll events
         glfwSwapBuffers(window);
