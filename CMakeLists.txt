@@ -21,17 +21,30 @@ include_directories(${GLFW3_INCLUDE_DIRS})
 add_executable(ModernOpenGL
     src/main.cpp
     src/utils/fileUtils.cpp
-    external/serialPort/serialPort.cpp
     src/utils/arduinoController.cpp
     src/utils/textureUtils.cpp
     src/utils/inputUtils.cpp
     src/utils/cameraUtils.cpp
+    src/utils/profilingUtils.cpp
+
+    external/serialPort/serialPort.cpp
+    external/imgui/imgui.cpp
+    external/imgui/imgui_demo.cpp
+    external/imgui/imgui_draw.cpp
+    external/imgui/imgui_tables.cpp
+    external/imgui/imgui_widgets.cpp
+    external/imgui/backends/imgui_impl_opengl3.cpp
+    external/imgui/backends/imgui_impl_glfw.cpp
+
+
 )
 
 # Now set include directories for your target
 target_include_directories(ModernOpenGL PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/external/serialPort
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
 )
 
 # Link the OpenGL and GLFW libraries

@@ -3,7 +3,12 @@
 #include "utils/textureUtils.h"
 #include "utils/inputUtils.h"
 #include "utils/cameraUtils.h"
+#include "utils/profilingUtils.h"
 #include "meshes/cubeData.h"
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 //const char* portName = "\\\\.\\COM3"; // If your device is on COM4
 //ArduinoController arduino(portName);
@@ -82,6 +87,7 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(0); // Disable V-Sync
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -92,6 +98,18 @@ int main() {
         std::cerr << "Failed to initialize GLAD\n";
         return -1;
     }
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    // If using docking branch:
+    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init();
 
 	glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D rendering
     glDepthFunc(GL_LESS);
@@ -173,6 +191,8 @@ int main() {
     // Serial buffer
     GLchar buffer[2];
 
+	Profiler profiler; // Initialize profiler
+
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -180,12 +200,19 @@ int main() {
 
 		updateDeltaTime(); // Update delta time
 		processInput(window); // Process input for camera movement
+        profiler.frame();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        profiler.showOverlay();
 
         //GLuint state = arduino.readState();
         //std::cout << "Arduino state: " << state << std::endl;
         //GLfloat potValue = arduino.readPot();
 
         // Rendering commands
+        ImGui::Render();
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -210,6 +237,7 @@ int main() {
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         // Swap buffers and poll events
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -220,6 +248,10 @@ int main() {
     glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();
