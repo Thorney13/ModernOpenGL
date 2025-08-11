@@ -1,9 +1,8 @@
 #include "utils/arduino/arduinoController.h"
-#include "scene/camera.h"
 #include "utils/profilingUtils.h"
 #include "rendering/meshes/cubeData.h"
 #include "rendering/meshes/pyramidData.h"
-#include "scene/gameObject.h"
+#include "rendering/renderer.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -28,13 +27,6 @@ glm::mat4 model = glm::mat4(1.0f);
 glm::mat4 view = camera.getViewMatrix();
 glm::mat4 projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 glm::mat4 mvp = projection * view * model;
-
-void  updateDeltaTime() {
-	float currentFrame = (float)glfwGetTime();
-	deltaTime = currentFrame - lastFrame;
-	lastFrame = currentFrame;
-}
-
 
 void processInput(GLFWwindow* window) {
     float cameraSpeed = 2.5f * deltaTime;
@@ -109,18 +101,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 int main() {
-    // Initialize GLFW
+
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW\n";
         return -1;
     }
 
-    // Request OpenGL 3.3 Core profile
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Create the window
     GLFWwindow* window = glfwCreateWindow(800, 600, "Modern OpenGL Triangle", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
@@ -129,14 +119,13 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(0); // Disable V-Sync
+    glfwSwapInterval(0);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwSetCursorPosCallback(window, cursor_position_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    // Load OpenGL function pointers with GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD\n";
         return -1;
@@ -147,21 +136,14 @@ int main() {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-    // If using docking branch:
-    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
 
-	glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D rendering
-    glDepthFunc(GL_LESS);
+	Mesh cube(cubeVertices, cubeIndices);
+	Mesh pyramid(pyramidVertices, pyramidIndices);
 
-	Mesh cube(cubeVertices, cubeIndices); // Create a cube mesh
-	Mesh pyramid(pyramidVertices, pyramidIndices); // Create a pyramid mesh
-
-    
-    // Instead of all your shader compilation code:
     Shader* defaultShader = new Shader("../../../src/rendering/shaders/vertexShader.vert", "../../../src/rendering/shaders/fragmentShader.frag");
 
     Texture brickTexture("../../../src/rendering/textures/brick_BC.png");
@@ -187,54 +169,39 @@ int main() {
 	pyramidObject.setPosition(glm::vec3(1.5f, 0.0f, 0.0f));
 	pyramidObject.getModelMatrix();
 
+	Scene mainScene;
+	mainScene.setActiveCamera(&camera);
+	mainScene.addGameObject(&cubeObject);
+	mainScene.addGameObject(&pyramidObject);
+
+	Renderer renderer;
+	renderer.initialize();
+
     Profiler profiler;
 
-    //GLchar buffer[2];
-
-    // Render loop
     while (!glfwWindowShouldClose(window)) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
 
-		updateDeltaTime(); // Update delta time
-		processInput(window); // Process input for camera movement
+		processInput(window);
         profiler.frame();
+
+        mainScene.update();
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         profiler.showOverlay();
-
-        //GLuint state = arduino.readState();
-        //std::cout << "Arduino state: " << state << std::endl;
-        //GLfloat potValue = arduino.readPot();
-
         ImGui::Render();
-        glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		float currentTime = (float)glfwGetTime();
-		float rotationSpeed = 20.0f;
-		float rotationAngle = rotationSpeed * currentTime;
-
-        cubeObject.setRotation(glm::vec3(rotationAngle, rotationAngle, rotationAngle));
-        cubeObject.getModelMatrix();
-
-        pyramidObject.setRotation(glm::vec3(-rotationAngle, -rotationAngle, -rotationAngle));
-		pyramidObject.getModelMatrix();
-
-        view = camera.getViewMatrix();
-        projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
-
-        glm::mat4 viewProjection = projection * view;
-
-        cubeObject.draw(viewProjection);
-        pyramidObject.draw(viewProjection);
-
+        
+        renderer.beginFrame();
+        renderer.render(mainScene, windowWidth, windowHeight);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        renderer.endFrame();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
     }
 
     ImGui_ImplOpenGL3_Shutdown();
