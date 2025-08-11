@@ -3,7 +3,9 @@
 #include <stb_image.h>
 #include <iostream>
 
-Texture::Texture(const std::string& path) {
+Texture::Texture(const std::string& path)
+	: ID(0), width(0), height(0), channels(0), loaded(false)
+    {
 
     // Load image data
     stbi_set_flip_vertically_on_load(true); // OpenGL expects textures to be flipped

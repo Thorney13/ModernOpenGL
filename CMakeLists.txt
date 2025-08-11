@@ -26,6 +26,7 @@ add_executable(ModernOpenGL
     src/scene/camera.cpp
     src/utils/profilingUtils.cpp
     src/rendering/shader.cpp
+    src/rendering/mesh.cpp
 
     external/serialPort/serialPort.cpp
     external/imgui/imgui.cpp
@@ -35,7 +36,7 @@ add_executable(ModernOpenGL
     external/imgui/imgui_widgets.cpp
     external/imgui/backends/imgui_impl_opengl3.cpp
     external/imgui/backends/imgui_impl_glfw.cpp
-)
+  )
 
 add_definitions(-DGLFW_INCLUDE_NONE)
 

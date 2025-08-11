@@ -1,7 +1,8 @@
 #pragma once
 #include "utils/glIncludes.h"
+#include <vector>
 
-static const GLfloat cubeVertices[] = {
+const std::vector<GLfloat> cubeVertices = {
     // Front face (red)
    -0.5f, -0.5f,  0.5f,  1.f, 0.f, 0.f,  0.0f, 0.0f,
     0.5f, -0.5f,  0.5f,  1.f, 0.f, 0.f,  1.0f, 0.0f,
@@ -38,7 +39,7 @@ static const GLfloat cubeVertices[] = {
    -0.5f, -0.5f, -0.5f,  0.f, 1.f, 1.f,  1.0f, 0.0f
 };
 
-static const GLuint cubeIndices[] = {
+static std::vector<GLuint> cubeIndices = {
     // Front face
     0,  1,  2,  2,  3,  0,
     // Back face

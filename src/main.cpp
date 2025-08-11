@@ -1,9 +1,11 @@
 #include "utils/arduino/arduinoController.h"
 #include "scene/camera.h"
 #include "utils/profilingUtils.h"
-#include "meshes/cubeData.h"
+#include "rendering/meshes/cubeData.h"
+#include "rendering/meshes/pyramidData.h"
 #include "rendering/Shader.h"
 #include "rendering/textureUtils.h"
+#include "rendering/mesh.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -28,7 +30,6 @@ glm::mat4 model = glm::mat4(1.0f); // Identity matrix for model transformation
 glm::mat4 view = camera.getViewMatrix();
 glm::mat4 projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 glm::mat4 mvp = projection * view * model;
-
 
 void  updateDeltaTime() {
 	float currentFrame = (float)glfwGetTime();
@@ -158,35 +159,12 @@ int main() {
 	glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D rendering
     glDepthFunc(GL_LESS);
 
-    // Generate VAO, VBO and EBO
-    GLuint VAO, VBO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+	Mesh cube(cubeVertices, cubeIndices); // Create a cube mesh
+	Mesh pyramid(pyramidVertices, pyramidIndices); // Create a pyramid mesh
 
-    // Bind VAO then VBO and upload data
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
-
-    // Vertex attribute layout
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
     
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    // Unbind for safety
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
     // Instead of all your shader compilation code:
-    Shader ourShader("../../../src/rendering/shaders/vertexShader.vert", "../../../src/rendering/shaders/fragmentShader.frag");
+    Shader defaultShader("../../../src/rendering/shaders/vertexShader.vert", "../../../src/rendering/shaders/fragmentShader.frag");
 
     Texture brickTexture("../../../src/rendering/textures/brick_BC.png");
 
@@ -195,10 +173,10 @@ int main() {
 		brickTexture = Texture::createFallback();
 	}
 
+    Profiler profiler;
+
     // Serial buffer
     GLchar buffer[2];
-
-	Profiler profiler; // Initialize profiler
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -218,40 +196,45 @@ int main() {
         //std::cout << "Arduino state: " << state << std::endl;
         //GLfloat potValue = arduino.readPot();
 
-        // Rendering commands
         ImGui::Render();
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		float currentTime = (float)glfwGetTime();
-		float rotationSpeed = 0.5f; // Speed of rotation
-		float rotationAngle = rotationSpeed * currentTime; // Increment rotation angle
-		model = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(1.0f, 1.0f, 1.0f)); // Rotate around Y-axis
-        view = camera.getViewMatrix(); // Update view matrix based on camera position and direction
-		projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight); // Update projection matrix
-		mvp = projection * view * model; // Update MVP matrix
+		float rotationSpeed = 0.5f;
+		float rotationAngle = rotationSpeed * currentTime;
 
-        ourShader.use();
-        ourShader.setMat4("mvp", mvp);
+        glm::mat4 cubeModel = glm::mat4(1.0f);
+		glm::mat4 pyramidModel = glm::mat4(1.0f);
+
+		cubeModel = glm::translate(cubeModel, glm::vec3(-1.5f, 0.0f, 0.0f));
+		cubeModel = glm::rotate(cubeModel, rotationAngle, glm::vec3(1.0f, 1.0f, 1.0f));
+
+		pyramidModel = glm::translate(pyramidModel, glm::vec3(1.5f, 0.0f, 0.0f));
+        pyramidModel = glm::rotate(pyramidModel, rotationAngle, glm::vec3(1.0f, 1.0f, 1.0f));
+
+		glm::mat4 cubeMVP = projection * view * cubeModel;
+        glm::mat4 pyramidMVP = projection * view * pyramidModel;
+
+        view = camera.getViewMatrix();
+        projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight); 
+
+        defaultShader.use();
+        defaultShader.setMat4("mvp", cubeMVP);
         //glUniform1f(uStateLoc, potValue);
-
 		brickTexture.bind(0);
-        ourShader.setInt("u_Texture", 0);
-  
+        defaultShader.setInt("u_Texture", 0);
+        cube.draw();
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        defaultShader.setMat4("mvp", pyramidMVP);
+        brickTexture.bind(0);
+		pyramid.draw();
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // Swap buffers and poll events
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // Cleanup
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
