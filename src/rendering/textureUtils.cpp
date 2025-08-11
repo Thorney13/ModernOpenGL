@@ -3,25 +3,23 @@
 #include <stb_image.h>
 #include <iostream>
 
-GLuint loadTexture (const std::string& path) {
-    GLuint textureID = 0;
-    int width, height, nrChannels;
+Texture::Texture(const std::string& path) {
 
     // Load image data
     stbi_set_flip_vertically_on_load(true); // OpenGL expects textures to be flipped
-    unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
     if (data) {
         std::cout << "Successfully loaded texture: " << path << std::endl;
-        std::cout << "Dimensions: " << width << "x" << height << ", Channels: " << nrChannels << std::endl;
+        std::cout << "Dimensions: " << width << "x" << height << ", Channels: " << channels << std::endl;
 
-        glGenTextures(1, &textureID);
-        glBindTexture(GL_TEXTURE_2D, textureID);
+        glGenTextures(1, &ID);
+        glBindTexture(GL_TEXTURE_2D, ID);
 
         // Determine format based on number of channels
         GLenum format;
         GLenum internalFormat;
-        switch (nrChannels) {
+        switch (channels) {
         case 1:
             format = GL_RED;
             internalFormat = GL_R8;
@@ -35,9 +33,9 @@ GLuint loadTexture (const std::string& path) {
             internalFormat = GL_RGBA8;
             break;
         default:
-            std::cerr << "Unsupported number of channels: " << nrChannels << std::endl;
+            std::cerr << "Unsupported number of channels: " << channels << std::endl;
             stbi_image_free(data);
-            return 0;
+            return;
         }
 
         // Upload texture data
@@ -55,21 +53,34 @@ GLuint loadTexture (const std::string& path) {
         // Clean up
         stbi_image_free(data);
         glBindTexture(GL_TEXTURE_2D, 0);
+		loaded = true;
 
-        std::cout << "Texture created with ID: " << textureID << std::endl;
+        std::cout << "Texture created with ID: " << ID << std::endl;
     }
     else {
         std::cerr << "Failed to load texture: " << path << std::endl;
         std::cerr << "STB Error: " << stbi_failure_reason() << std::endl;
     }
+ }
 
-    return textureID;
-    };
+Texture::~Texture() {
+    if (ID != 0) {
+        glDeleteTextures(1, &ID);
+    }
+}
 
+void Texture::bind(unsigned int textureUnit) const {
+    if (loaded) {
+        glActiveTexture(GL_TEXTURE0 + textureUnit);
+        glBindTexture(GL_TEXTURE_2D, ID);
+    } else {
+        std::cerr << "Texture not loaded, cannot bind." << std::endl;
+	}
+}
 
-
-    GLuint createFallbackTexture() {
+Texture Texture::createFallback() {
     std::cerr << "Creating fallback checkerboard texture..." << std::endl;
+
     // Create a simple 2x2 checkerboard pattern
     unsigned char checkerboard[] = {
         255, 255, 255, 255,  // White
@@ -78,9 +89,9 @@ GLuint loadTexture (const std::string& path) {
         255, 255, 255, 255   // White
     };
 
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+	Texture fallbackTexture("");
+    glGenTextures(1, &fallbackTexture.ID);
+    glBindTexture(GL_TEXTURE_2D, fallbackTexture.ID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerboard);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -88,6 +99,11 @@ GLuint loadTexture (const std::string& path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    std::cout << "Fallback texture created with ID: " << textureID << std::endl;
-	return textureID;
+    fallbackTexture.width = 2;
+    fallbackTexture.height = 2;
+    fallbackTexture.channels = 4;
+    fallbackTexture.loaded = true;
+
+    std::cout << "Fallback texture created with ID: " << fallbackTexture.ID << std::endl;
+	return fallbackTexture;
 }

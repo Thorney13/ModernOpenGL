@@ -188,15 +188,11 @@ int main() {
     // Instead of all your shader compilation code:
     Shader ourShader("../../../src/rendering/shaders/vertexShader.vert", "../../../src/rendering/shaders/fragmentShader.frag");
 
-    // Load texture using stb_image instead of gli
-    GLuint textureID = 0;
-    
-    // Function to load texture with stb_image
-	textureID = loadTexture("../../../src/rendering/textures/brick_BC.png");
-  
-    // Create fallback texture if loading failed
-	if (textureID == 0) {
-		textureID = createFallbackTexture();
+    Texture brickTexture("../../../src/rendering/textures/brick_BC.png");
+
+    if(!brickTexture.isLoaded()) {
+        std::cerr << "Failed to load texture\n";
+		brickTexture = Texture::createFallback();
 	}
 
     // Serial buffer
@@ -239,11 +235,9 @@ int main() {
         ourShader.setMat4("mvp", mvp);
         //glUniform1f(uStateLoc, potValue);
 
-        if (textureID != 0) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            ourShader.setInt("u_Texture", 0);
-        }
+		brickTexture.bind(0);
+        ourShader.setInt("u_Texture", 0);
+  
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
