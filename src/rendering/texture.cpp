@@ -1,4 +1,4 @@
-#include "textureUtils.h"
+#include "texture.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <iostream>
@@ -64,6 +64,10 @@ Texture::Texture(const std::string& path)
         std::cerr << "STB Error: " << stbi_failure_reason() << std::endl;
     }
  }
+
+Texture::Texture() : ID(0), width(0), height(0), channels(0), loaded(false) {
+
+}
 
 Texture::~Texture() {
     if (ID != 0) {

@@ -10,6 +10,7 @@ private:
 
 public:
 	Texture(const std::string& path);
+	Texture();
 	~Texture();
 
 	void bind(unsigned int textureUnit = 0) const;

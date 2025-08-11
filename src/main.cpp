@@ -3,9 +3,7 @@
 #include "utils/profilingUtils.h"
 #include "rendering/meshes/cubeData.h"
 #include "rendering/meshes/pyramidData.h"
-#include "rendering/Shader.h"
-#include "rendering/textureUtils.h"
-#include "rendering/mesh.h"
+#include "scene/gameObject.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -26,20 +24,20 @@ bool firstMouse = true;
 bool rightMousePressed = false;
 double lastX, lastY;
 
-glm::mat4 model = glm::mat4(1.0f); // Identity matrix for model transformation
+glm::mat4 model = glm::mat4(1.0f);
 glm::mat4 view = camera.getViewMatrix();
 glm::mat4 projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 glm::mat4 mvp = projection * view * model;
 
 void  updateDeltaTime() {
 	float currentFrame = (float)glfwGetTime();
-	deltaTime = currentFrame - lastFrame; // Calculate time difference
-	lastFrame = currentFrame; // Update last frame time
+	deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
 }
 
 
 void processInput(GLFWwindow* window) {
-    float cameraSpeed = 2.5f * deltaTime; // Speed of camera movement
+    float cameraSpeed = 2.5f * deltaTime;
 
     // Forward / Back
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -164,19 +162,34 @@ int main() {
 
     
     // Instead of all your shader compilation code:
-    Shader defaultShader("../../../src/rendering/shaders/vertexShader.vert", "../../../src/rendering/shaders/fragmentShader.frag");
+    Shader* defaultShader = new Shader("../../../src/rendering/shaders/vertexShader.vert", "../../../src/rendering/shaders/fragmentShader.frag");
 
     Texture brickTexture("../../../src/rendering/textures/brick_BC.png");
+	Texture woodTexture("../../../src/rendering/textures/wood_BC.png");
+
+    Material brickMaterial(defaultShader);
+    Material woodMaterial(defaultShader);
+
+    brickMaterial.addTexture("u_Texture", brickTexture);
+	woodMaterial.addTexture("u_Texture", woodTexture);
+
 
     if(!brickTexture.isLoaded()) {
         std::cerr << "Failed to load texture\n";
 		brickTexture = Texture::createFallback();
 	}
 
+	GameObject cubeObject(&cube, &brickMaterial);
+	cubeObject.setPosition(glm::vec3(-1.5f, 0.0f, 0.0f));
+	cubeObject.getModelMatrix();
+
+	GameObject pyramidObject(&pyramid, &woodMaterial);
+	pyramidObject.setPosition(glm::vec3(1.5f, 0.0f, 0.0f));
+	pyramidObject.getModelMatrix();
+
     Profiler profiler;
 
-    // Serial buffer
-    GLchar buffer[2];
+    //GLchar buffer[2];
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -201,34 +214,22 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		float currentTime = (float)glfwGetTime();
-		float rotationSpeed = 0.5f;
+		float rotationSpeed = 20.0f;
 		float rotationAngle = rotationSpeed * currentTime;
 
-        glm::mat4 cubeModel = glm::mat4(1.0f);
-		glm::mat4 pyramidModel = glm::mat4(1.0f);
+        cubeObject.setRotation(glm::vec3(rotationAngle, rotationAngle, rotationAngle));
+        cubeObject.getModelMatrix();
 
-		cubeModel = glm::translate(cubeModel, glm::vec3(-1.5f, 0.0f, 0.0f));
-		cubeModel = glm::rotate(cubeModel, rotationAngle, glm::vec3(1.0f, 1.0f, 1.0f));
-
-		pyramidModel = glm::translate(pyramidModel, glm::vec3(1.5f, 0.0f, 0.0f));
-        pyramidModel = glm::rotate(pyramidModel, rotationAngle, glm::vec3(1.0f, 1.0f, 1.0f));
-
-		glm::mat4 cubeMVP = projection * view * cubeModel;
-        glm::mat4 pyramidMVP = projection * view * pyramidModel;
+        pyramidObject.setRotation(glm::vec3(-rotationAngle, -rotationAngle, -rotationAngle));
+		pyramidObject.getModelMatrix();
 
         view = camera.getViewMatrix();
-        projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight); 
+        projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 
-        defaultShader.use();
-        defaultShader.setMat4("mvp", cubeMVP);
-        //glUniform1f(uStateLoc, potValue);
-		brickTexture.bind(0);
-        defaultShader.setInt("u_Texture", 0);
-        cube.draw();
+        glm::mat4 viewProjection = projection * view;
 
-        defaultShader.setMat4("mvp", pyramidMVP);
-        brickTexture.bind(0);
-		pyramid.draw();
+        cubeObject.draw(viewProjection);
+        pyramidObject.draw(viewProjection);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
