@@ -1,10 +1,9 @@
-#include "utils/arduinoController.h"
-#include "utils/fileUtils.h"
-#include "utils/textureUtils.h"
-#include "utils/inputUtils.h"
-#include "utils/cameraUtils.h"
+#include "utils/arduino/arduinoController.h"
+#include "scene/camera.h"
 #include "utils/profilingUtils.h"
 #include "meshes/cubeData.h"
+#include "rendering/Shader.h"
+#include "rendering/textureUtils.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -13,18 +12,87 @@
 //const char* portName = "\\\\.\\COM3"; // If your device is on COM4
 //ArduinoController arduino(portName);
 
+Camera camera;
+
 int windowWidth = 800;
 int windowHeight = 600;
 
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+bool firstMouse = true;
+bool rightMousePressed = false;
+double lastX, lastY;
+
 glm::mat4 model = glm::mat4(1.0f); // Identity matrix for model transformation
-glm::mat4 view = getViewMatrix(); // Get initial view matrix from cameraUtils
-glm::mat4 projection = glm::perspective(fov, (float)windowWidth / (float)windowHeight, nearPlane, farPlane);
+glm::mat4 view = camera.getViewMatrix();
+glm::mat4 projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 glm::mat4 mvp = projection * view * model;
+
 
 void  updateDeltaTime() {
 	float currentFrame = (float)glfwGetTime();
 	deltaTime = currentFrame - lastFrame; // Calculate time difference
 	lastFrame = currentFrame; // Update last frame time
+}
+
+
+void processInput(GLFWwindow* window) {
+    float cameraSpeed = 2.5f * deltaTime; // Speed of camera movement
+
+    // Forward / Back
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::BACKWARD, deltaTime);
+
+    // Left / Right
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::LEFT, deltaTime);
+
+    // Up / Down
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::DOWN, deltaTime);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        rightMousePressed = true;
+        firstMouse = true; // Reset first mouse flag when right button is pressed
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide cursor and capture mouse movement
+    }
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+        rightMousePressed = false;
+
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Reset cursor mode
+    }
+}
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (!rightMousePressed) return; // Only process if right mouse button is pressed
+
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false; // Reset first mouse flag
+        return;
+    }
+
+    float xoffset = float(xpos - lastX);
+    float yoffset = float(lastY - ypos); // Invert y-axis for natural movement
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.processMouseMovement(xoffset, yoffset, true);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    camera.processMouseScroll(float(yoffset));
 }
 
 // Callback to resize viewport when window is resized
@@ -35,35 +103,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     windowHeight = height;
 
     // Recalculate projection matrix with new aspect ratio
-    projection = glm::perspective(
-        glm::radians(45.0f),
-        (float)width / (float)height,
-        0.1f,
-        100.0f
-    );
+    projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 
     // Recalculate MVP matrix
     mvp = projection * view * model;
-}
-
-// Error-checking function
-void checkShaderCompile(GLuint shader, const std::string& type) {
-    int success;
-    char infoLog[512];
-    if (type == "PROGRAM") {
-        glGetProgramiv(shader, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(shader, 512, NULL, infoLog);
-            std::cerr << "ERROR::PROGRAM_LINKING_ERROR\n" << infoLog << "\n";
-        }
-    }
-    else {
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(shader, 512, NULL, infoLog);
-            std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n";
-        }
-    }
 }
 
 int main() {
@@ -92,6 +135,7 @@ int main() {
 
     glfwSetCursorPosCallback(window, cursor_position_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     // Load OpenGL function pointers with GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -141,47 +185,14 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    //Load shaders
-    const std::string vertexShaderSourceStr = get_file_contents("../../../src/shaders/vertexShader.vert");
-    const std::string fragmentShaderSourceStr = get_file_contents("../../../src/shaders/fragmentShader.frag");
-    const GLchar* vertexShaderSource = vertexShaderSourceStr.c_str();
-    const GLchar* fragmentShaderSource = fragmentShaderSourceStr.c_str();
-    //std::cout << "Vertex Shader:\n" << vertexShaderSourceStr << std::endl;
-    //std::cout << "Fragment Shader:\n" << fragmentShaderSourceStr << std::endl;
-
-    // Compile vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertexShader);
-    checkShaderCompile(vertexShader, "VERTEX");
-
-    // Compile fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
-    checkShaderCompile(fragmentShader, "FRAGMENT");
-
-    // Link shader program
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-
-    //GLfloat uStateLoc = glGetUniformLocation(shaderProgram, "u_State");
-    GLuint MatrixID = glGetUniformLocation(shaderProgram, "mvp");
-
-    checkShaderCompile(shaderProgram, "PROGRAM");
-
-    // Delete shaders after linking
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    // Instead of all your shader compilation code:
+    Shader ourShader("../../../src/rendering/shaders/vertexShader.vert", "../../../src/rendering/shaders/fragmentShader.frag");
 
     // Load texture using stb_image instead of gli
     GLuint textureID = 0;
     
     // Function to load texture with stb_image
-	textureID = loadTexture("../../../src/textures/brick_BC.png");
+	textureID = loadTexture("../../../src/rendering/textures/brick_BC.png");
   
     // Create fallback texture if loading failed
 	if (textureID == 0) {
@@ -220,18 +231,18 @@ int main() {
 		float rotationSpeed = 0.5f; // Speed of rotation
 		float rotationAngle = rotationSpeed * currentTime; // Increment rotation angle
 		model = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(1.0f, 1.0f, 1.0f)); // Rotate around Y-axis
-        view = getViewMatrix(); // Update view matrix based on camera position and direction
-		projection = glm::perspective(fov, (float)windowWidth / (float)windowHeight, nearPlane, farPlane); // Update projection matrix
+        view = camera.getViewMatrix(); // Update view matrix based on camera position and direction
+		projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight); // Update projection matrix
 		mvp = projection * view * model; // Update MVP matrix
 
-        glUseProgram(shaderProgram);
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+        ourShader.use();
+        ourShader.setMat4("mvp", mvp);
         //glUniform1f(uStateLoc, potValue);
 
         if (textureID != 0) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textureID);
-            glUniform1i(glGetUniformLocation(shaderProgram, "u_Texture"), 0);
+            ourShader.setInt("u_Texture", 0);
         }
 
         glBindVertexArray(VAO);
@@ -247,7 +258,6 @@ int main() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

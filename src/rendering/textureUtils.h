@@ -1,7 +1,8 @@
 #pragma once
+#include "utils/glIncludes.h"
 #include <string>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+
+
 
 GLuint loadTexture(const std::string& path);
 GLuint createFallbackTexture();

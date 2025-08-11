@@ -1,5 +1,5 @@
 #pragma once
-#include <glad/glad.h>
+#include "utils/glIncludes.h"
 
 static const GLfloat cubeVertices[] = {
     // Front face (red)
