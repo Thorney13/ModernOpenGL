@@ -31,6 +31,7 @@ add_executable(ModernOpenGL
     src/scene/gameObject.cpp
     src/scene/scene.cpp
     src/rendering/renderer.cpp
+    src/core/window.cpp
 
     external/serialPort/serialPort.cpp
     external/imgui/imgui.cpp
@@ -40,7 +41,7 @@ add_executable(ModernOpenGL
     external/imgui/imgui_widgets.cpp
     external/imgui/backends/imgui_impl_opengl3.cpp
     external/imgui/backends/imgui_impl_glfw.cpp
-)
+ )
 
 add_definitions(-DGLFW_INCLUDE_NONE)
 

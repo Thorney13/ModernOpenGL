@@ -3,6 +3,7 @@
 #include "rendering/meshes/cubeData.h"
 #include "rendering/meshes/pyramidData.h"
 #include "rendering/renderer.h"
+#include "core/window.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -16,6 +17,8 @@ Camera camera;
 int windowWidth = 800;
 int windowHeight = 600;
 
+Window window(windowWidth, windowHeight, "Modern OpenGL");
+
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
@@ -28,26 +31,10 @@ glm::mat4 view = camera.getViewMatrix();
 glm::mat4 projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 glm::mat4 mvp = projection * view * model;
 
-void processInput(GLFWwindow* window) {
-    float cameraSpeed = 2.5f * deltaTime;
-
-    // Forward / Back
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.processKeyboardInput(Camera::FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.processKeyboardInput(Camera::BACKWARD, deltaTime);
-
-    // Left / Right
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.processKeyboardInput(Camera::RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.processKeyboardInput(Camera::LEFT, deltaTime);
-
-    // Up / Down
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        camera.processKeyboardInput(Camera::UP, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        camera.processKeyboardInput(Camera::DOWN, deltaTime);
+void updateDeltaTime() {
+    float currentFrame = (float)glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -86,45 +73,38 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     camera.processMouseScroll(float(yoffset));
 }
 
-// Callback to resize viewport when window is resized
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
+void input(GLFWwindow* window) {
+    float cameraSpeed = 2.5f * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::BACKWARD, deltaTime);
 
-	windowWidth = width;
-    windowHeight = height;
+    // Left / Right
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::LEFT, deltaTime);
 
-    // Recalculate projection matrix with new aspect ratio
-    projection = camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
-
-    // Recalculate MVP matrix
-    mvp = projection * view * model;
+    // Up / Down
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        camera.processKeyboardInput(Camera::DOWN, deltaTime);
 }
 
 int main() {
 
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW\n";
-        return -1;
-    }
+    window.initialise();
+    window.setMouseButtonCallback(mouse_button_callback);
+    window.setCursorPosCallback(cursor_position_callback);
+    window.setScrollCallback(scroll_callback);
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Modern OpenGL Triangle", nullptr, nullptr);
-    if (!window) {
-        std::cerr << "Failed to create GLFW window\n";
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(0);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    glfwSetCursorPosCallback(window, cursor_position_callback);
-	glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+    window.setResizeCallback([](int w, int h) {
+        glViewport(0, 0, w, h);
+        projection = camera.getProjectionMatrix((float)w / (float)h);
+        mvp = projection * view * model;
+        });
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD\n";
@@ -136,10 +116,9 @@ int main() {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
     ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init();
+    ImGui_ImplGlfw_InitForOpenGL(window.getGLFWWindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
 	Mesh cube(cubeVertices, cubeIndices);
 	Mesh pyramid(pyramidVertices, pyramidIndices);
@@ -179,11 +158,13 @@ int main() {
 
     Profiler profiler;
 
-    while (!glfwWindowShouldClose(window)) {
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
+    while (!window.shouldClose()) {
+        if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            window.setShouldClose(true);
 
-		processInput(window);
+        updateDeltaTime();
+        input(window.getGLFWWindow());
+
         profiler.frame();
 
         mainScene.update();
@@ -199,8 +180,8 @@ int main() {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         renderer.endFrame();
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        window.swapBuffers();
+        window.pollEvents();
 
     }
 
@@ -208,7 +189,5 @@ int main() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(window);
-    glfwTerminate();
     return 0;
 }
