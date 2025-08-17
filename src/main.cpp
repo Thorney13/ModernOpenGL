@@ -176,7 +176,7 @@ int main() {
         ImGui::Render();
         
         renderer.beginFrame();
-        renderer.render(mainScene, windowWidth, windowHeight);
+        renderer.render(mainScene, window);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         renderer.endFrame();
 

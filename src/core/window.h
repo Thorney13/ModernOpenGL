@@ -19,7 +19,7 @@ public:
 	void swapBuffers();
 	void pollEvents();
 
-	void setShouldClose(bool value) { glfwSetWindowShouldClose(window, value); }
+	void setShouldClose(bool value);
 	void setResizeCallback(const std::function<void(int, int)>& callback);
 	void setKeyCallback(GLFWkeyfun callback);
 	void setMouseButtonCallback(GLFWmousebuttonfun callback);

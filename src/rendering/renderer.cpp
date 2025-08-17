@@ -20,9 +20,10 @@ void Renderer::beginFrame() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::render(const Scene& scene, float windowWidth, float windowHeight) {
+void Renderer::render(const Scene& scene, const Window& window) {
 
-	glViewport(0, 0, windowWidth, windowHeight);
+	float windowWidth = static_cast<float>(window.getWidth());
+	float windowHeight = static_cast<float>(window.getHeight());
 
 	const_cast<Scene&>(scene).render(windowWidth, windowHeight);
 }

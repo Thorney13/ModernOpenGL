@@ -38,6 +38,10 @@ bool Window::initialise() {
 
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int w, int h) {
 		auto* self = static_cast<Window*>(glfwGetWindowUserPointer(win));
+
+		self->width = w;
+		self->height = h;
+
 		if (self->resizeCallback) {
 			self->resizeCallback(w, h);
 		}
@@ -57,6 +61,10 @@ void Window::swapBuffers() {
 
 void Window::pollEvents() {
 	glfwPollEvents();
+}
+
+void Window::setShouldClose(bool value) { 
+	glfwSetWindowShouldClose(window, value); 
 }
 
 void Window::setResizeCallback(const std::function<void(int, int)>& callback)
