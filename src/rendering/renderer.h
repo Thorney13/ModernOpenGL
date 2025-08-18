@@ -4,7 +4,7 @@
 
 class Renderer {
 private:
-	glm::vec3 clearColor;
+	glm::vec4 clearColor;
 
 public:
 
@@ -12,7 +12,7 @@ public:
     ~Renderer();
 
     void initialize();
-    void setClearColor(const glm::vec3& color);
+    void setClearColor(const glm::vec4& color);
 
     void beginFrame();
     void render(const Scene& scene, const Window& window);

@@ -1,6 +1,6 @@
 #include "renderer.h"
 
-Renderer::Renderer() : clearColor(0.1f, 0.1f, 0.15f) {
+Renderer::Renderer() : clearColor(0.1f, 0.1f, 0.15f, 1.0f) {
 }
 
 Renderer::~Renderer() {
@@ -11,12 +11,12 @@ void Renderer::initialize() {
 	glDepthFunc(GL_LESS);
 }
 
-void Renderer::setClearColor(const glm::vec3& color) {
+void Renderer::setClearColor(const glm::vec4& color) {
 	clearColor = color;
 }
 
 void Renderer::beginFrame() {
-	glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+	glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
