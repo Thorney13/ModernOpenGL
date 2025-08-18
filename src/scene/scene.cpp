@@ -39,7 +39,7 @@ void Scene::update() {
 			float rotationSpeed = 20.0f;
 			float rotationAngle = rotationSpeed * currentTime;
 
-			//obj->setRotation(glm::vec3(rotationAngle, rotationAngle, rotationAngle));
+			obj->setRotation(glm::vec3(rotationAngle, rotationAngle, rotationAngle));
 			obj->getModelMatrix();
 		}
 	}

@@ -4,6 +4,7 @@
 #include "rendering/meshes/pyramidData.h"
 #include "rendering/renderer.h"
 #include "input/inputManager.h"
+#include "utils/timeManager.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -14,19 +15,11 @@
 int windowWidth = 800;
 int windowHeight = 600;
 
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
-
 Window window(windowWidth, windowHeight, "Modern OpenGL");
 Camera camera;
 InputManager input;
 Scene mainScene;
-
-void updateDeltaTime() {
-    float currentFrame = (float)glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
-}
+TimeManager timeManager;
 
 int main() {
     window.initialise();
@@ -86,7 +79,8 @@ int main() {
     Profiler profiler;
 
     while (!window.shouldClose()) {
-        updateDeltaTime();
+        timeManager.update();
+        float deltaTime = timeManager.getDeltaTime();
         input.processInput(deltaTime);
 
         profiler.frame();

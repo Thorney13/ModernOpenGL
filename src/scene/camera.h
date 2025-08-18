@@ -59,8 +59,7 @@ public:
 	glm::vec3 getPosition() const { return position; }
 	glm::vec3 getFront() const { return front; }
 	glm::vec3 getUp() const { return up; }
-	//float getFov() const { return fov; }
-	void setPosiion(const glm::vec3& pos) { position = pos; }
+	void setPosition(const glm::vec3& pos) { position = pos; }
 
 	enum CameraMovement {
 		FORWARD,
