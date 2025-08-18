@@ -3,7 +3,7 @@
 InputManager* InputManager::instance = nullptr;
 
 InputManager::InputManager()
-	: window(nullptr), camera(nullptr), firstMouse(false), rightMousePressed(false),
+	: window(nullptr), camera(nullptr), scene(nullptr), firstMouse(false), rightMousePressed(false),
 	lastX(0), lastY(0), deltaTime(0)
 {
     instance = this;
@@ -38,10 +38,11 @@ void InputManager::keyCallback(GLFWwindow* window, int key, int scancode, int ac
     }
 }
 
-void InputManager::initialise(Window* window, Camera* camera)
+void InputManager::initialise(Window* window, Camera* camera, Scene* scene)
 {
     this->window = window;
     this->camera = camera;
+    this->scene = scene;
 
     window->setMouseButtonCallback(mouseButtonCallback);
     window->setCursorPosCallback(cursorPositionCallback);
@@ -106,6 +107,10 @@ void InputManager::handleScroll(double xoffset, double yoffset) {
 void InputManager::handleKey(int key, int action) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         window->setShouldClose(true);
+    }
+
+    if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+        scene->toggleProjectionMode();
     }
 }
 

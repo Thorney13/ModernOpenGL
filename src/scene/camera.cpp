@@ -7,10 +7,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 front, glm::vec3 up, float yaw, flo
 		yaw(yaw),
 		pitch(pitch),
 		movementSpeed(2.5f),
-		mouseSensitivity(0.1f),
-		fov(45.0f),
-		nearPlane(0.1f),
-		farPlane(100.0f) 
+		mouseSensitivity(0.1f)
 {
 	updateCameraVectors();
 }
@@ -28,12 +25,52 @@ void Camera::updateCameraVectors()
 	up = glm::normalize(glm::cross(right, front));
 }
 
+void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane)
+{
+	projection.mode = ProjectionMode::Perspective;
+	projection.fov = fov;
+	projection.aspect = aspect;
+	projection.nearPlane = nearPlane;
+	projection.farPlane = farPlane;
+}
+
+void Camera::setOrthographic(float width, float height, float nearPlane, float farPlane)
+{
+	projection.mode = ProjectionMode::Orthographic;
+	projection.orthoWidth = width;
+	projection.orthoHeight = height;
+	projection.nearPlane = nearPlane;
+	projection.farPlane = farPlane;
+}
+
+void Camera::setOrthographicFromPerspective(float distanceToTarget)
+{
+	if (projection.mode == ProjectionMode::Perspective) {
+		// Calculate the visible height at the given distance based on FOV
+		float visibleHeight = 2.0f * distanceToTarget * tan(projection.fov / 2.0f);
+		float visibleWidth = visibleHeight * projection.aspect;
+
+		// Switch to orthographic with the same visible area
+		setOrthographic(visibleWidth, visibleHeight, projection.nearPlane, projection.farPlane);
+	}
+}
+
 glm::mat4 Camera::getViewMatrix() const {
     return glm::lookAt(position, position + front, up);
 }
 
-glm::mat4 Camera::getProjectionMatrix(float aspectRatio) const {
-	return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
+glm::mat4 Camera::getProjectionMatrix() const {
+	switch (projection.mode) {
+	case ProjectionMode::Perspective:
+		return glm::perspective(glm::radians(projection.fov), projection.aspect, projection.nearPlane, projection.farPlane);
+	case ProjectionMode::Orthographic:
+		return glm::ortho(
+			-projection.orthoWidth / 2.0f, projection.orthoWidth / 2.0f,
+			-projection.orthoHeight / 2.0f, projection.orthoHeight / 2.0f,
+			projection.nearPlane, projection.farPlane);
+	default:
+		return glm::mat4(1.0f);
+	}
 }
 
 // Processes keyboard input for camera movement
@@ -69,9 +106,9 @@ void Camera::processMouseMovement(float xoffset, float yoffset, bool constrainPi
 }
 
 void Camera::processMouseScroll(float yoffset) {
-	fov -= yoffset;
-	if (fov < 1.0f)
-		fov = 1.0f;
-	if (fov > 45.0f)
-		fov = 45.0f;
+	projection.fov -= yoffset;
+	if (projection.fov < 1.0f)
+		projection.fov = 1.0f;
+	if (projection.fov > 45.0f)
+		projection.fov = 45.0f;
 }

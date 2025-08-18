@@ -6,6 +6,8 @@ class Scene {
 private:
     std::vector<GameObject*> gameObjects;
     Camera* activeCamera;
+    float lastWindowWidth, lastWindowHeight;
+    bool usePerspectiveProjection;
 
 public:
 	Scene();
@@ -17,4 +19,5 @@ public:
     Camera* getActiveCamera() const;
     void update();
     void render(float windowWidth, float windowHeight);
+    void toggleProjectionMode();
 };

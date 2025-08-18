@@ -20,6 +20,7 @@ float lastFrame = 0.0f;
 Window window(windowWidth, windowHeight, "Modern OpenGL");
 Camera camera;
 InputManager input;
+Scene mainScene;
 
 void updateDeltaTime() {
     float currentFrame = (float)glfwGetTime();
@@ -29,7 +30,7 @@ void updateDeltaTime() {
 
 int main() {
     window.initialise();
-    input.initialise(&window, &camera);
+    input.initialise(&window, &camera, &mainScene);
 
     window.setResizeCallback([](int w, int h) {
         glViewport(0, 0, w, h);
@@ -74,7 +75,6 @@ int main() {
 	pyramidObject.setPosition(glm::vec3(1.5f, 0.0f, 0.0f));
 	pyramidObject.getModelMatrix();
 
-	Scene mainScene;
 	mainScene.setActiveCamera(&camera);
 	mainScene.addGameObject(&cubeObject);
 	mainScene.addGameObject(&pyramidObject);

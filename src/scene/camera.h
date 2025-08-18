@@ -1,6 +1,22 @@
 #pragma once
 #include "utils/glIncludes.h"
 
+enum class ProjectionMode {
+	Perspective,
+	Orthographic
+};
+
+struct ProjectionType {
+	ProjectionMode mode;
+	float fov = 45.0f;
+	float aspect = 1.0f;
+	float nearPlane = 0.1f;
+	float farPlane = 100.0f;
+	float orthoWidth = 10.0f;
+	float orthoHeight = 10.0f;
+};
+
+
 class Camera {
 
 private:
@@ -15,9 +31,6 @@ private:
 
 	float movementSpeed;
 	float mouseSensitivity;
-	float fov;
-	float nearPlane;
-	float farPlane;
 
 	void updateCameraVectors();
 
@@ -31,8 +44,13 @@ public:
 		float pitch = 0.0f
 	);
 
+	ProjectionType projection;
+	void setPerspective(float fov, float aspect, float nearPlane, float farPlane);
+	void setOrthographic(float width, float height, float nearPlane, float farPlane);
+	void setOrthographicFromPerspective(float distanceToTarget);
+
 	glm::mat4 getViewMatrix() const;
-	glm::mat4 getProjectionMatrix(float aspectRatio) const;
+	glm::mat4 getProjectionMatrix() const;
 
 	void processKeyboardInput(int direction, float deltaTime);
 	void processMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
@@ -41,7 +59,7 @@ public:
 	glm::vec3 getPosition() const { return position; }
 	glm::vec3 getFront() const { return front; }
 	glm::vec3 getUp() const { return up; }
-	float getFov() const { return fov; }
+	//float getFov() const { return fov; }
 	void setPosiion(const glm::vec3& pos) { position = pos; }
 
 	enum CameraMovement {

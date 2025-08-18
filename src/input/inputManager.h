@@ -1,11 +1,13 @@
 #pragma once
 #include "core/window.h"
 #include "scene/camera.h"
+#include "scene/scene.h"
 
 class InputManager {
 private:
 	Window* window;
 	Camera* camera;
+	Scene* scene;
 
 	bool firstMouse;
 	bool rightMousePressed;
@@ -23,7 +25,8 @@ public:
 	InputManager();
 	~InputManager();
 
-	void initialise(Window* window, Camera* camera);
+	void initialise(Window* window, Camera* camera, Scene* scene);
+
 	void processInput(float deltaTime);
 
 	void handleMouseButton(int button, int action, int mods);
