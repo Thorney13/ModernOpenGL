@@ -4,6 +4,11 @@ GameObject::GameObject(Mesh* mesh, Material* material)
 	: position(0.0f), rotation(0.0f), scale(1.0f), mesh(mesh), material(material) {
 }
 
+GameObject::~GameObject() {
+	delete mesh;
+	delete material;
+}
+
 void GameObject::setPosition(const glm::vec3& pos) {
 	position = pos;
 }

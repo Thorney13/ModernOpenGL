@@ -12,6 +12,7 @@ private:
 
 public:
     GameObject(Mesh* mesh, Material* material);
+    ~GameObject();
     void setPosition(const glm::vec3& pos);
     void setRotation(const glm::vec3& rot);
     void setScale(const glm::vec3& scale);

@@ -1,6 +1,7 @@
 #include "utils/arduino/arduinoController.h"
 #include "rendering/meshes/cubeData.h"
 #include "rendering/meshes/pyramidData.h"
+#include "rendering/meshes/planeData.h"
 #include "rendering/renderer.h"
 #include "core/inputManager.h"
 #include "core/timeManager.h"
@@ -18,6 +19,83 @@ InputManager input;
 Scene mainScene;
 TimeManager timeManager;
 
+Shader* shader3D = nullptr;
+Shader* defaultShader = nullptr;
+
+enum class RenderMode {
+    MODE_3D,
+    MODE_SHADERTOY
+};
+
+RenderMode currentMode = RenderMode::MODE_SHADERTOY;
+
+void static setupResources()
+{
+    if (currentMode == RenderMode::MODE_3D)
+    {
+        std::string shaderPath = "../../../src/rendering/shaders/";
+        std::string texturePath = "../../../src/rendering/textures/";
+
+        shader3D = new Shader(shaderPath + "vertexShader.vert", shaderPath + "fragmentShader.frag");
+
+        Mesh* cube = new Mesh(cubeVertices, cubeIndices);
+        Mesh* pyramid = new Mesh(pyramidVertices, pyramidIndices);
+
+        Texture* brickTexture = new Texture(texturePath + "brick_BC.png");
+        Texture* woodTexture = new Texture(texturePath + "wood_BC.png");
+
+        Material* brickMaterial = new Material(shader3D);
+        Material* woodMaterial = new Material(shader3D);
+
+        brickMaterial->addTexture("u_Texture", *brickTexture);
+        woodMaterial->addTexture("u_Texture", *woodTexture);
+
+        if (!brickTexture->isLoaded()) {
+            std::cerr << "Failed to load texture\n";
+            *brickTexture = Texture::createFallback();
+        }
+
+        GameObject* cubeObject = new GameObject(cube, brickMaterial);
+        cubeObject->setPosition(glm::vec3(-1.5f, 0.0f, 0.0f));
+        cubeObject->getModelMatrix();
+
+        GameObject* pyramidObject = new GameObject(pyramid, woodMaterial);
+        pyramidObject->setPosition(glm::vec3(1.5f, 0.0f, 0.0f));
+        pyramidObject->getModelMatrix();
+
+        mainScene.setActiveCamera(&camera);
+        mainScene.addGameObject(cubeObject);
+        mainScene.addGameObject(pyramidObject);
+    }
+    else
+    {
+        std::string shaderPath = "../../../src/rendering/shaders/shaderToy/";
+
+        defaultShader = new Shader(shaderPath + "default.vert", shaderPath + "default.frag");
+
+        Mesh* fullscreenQuad = new Mesh(quadVertices, quadIndices);
+        Material* shaderToyMaterial = new Material(defaultShader);
+
+        GameObject* shaderQuad = new GameObject(fullscreenQuad, shaderToyMaterial);
+        shaderQuad->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+
+        mainScene.setActiveCamera(&camera);
+        mainScene.addGameObject(shaderQuad);
+    }
+}
+
+void static updateScene() {
+    if (currentMode == RenderMode::MODE_3D) {
+    }
+    else {
+        float totalTime = static_cast<float>(glfwGetTime());
+        if (defaultShader) {
+            defaultShader->setFloat("iTime", totalTime);
+            defaultShader->setVec2("iResolution", glm::vec2(windowWidth, windowHeight));
+        }
+    }
+}
+
 int main() {
     window.initialise();
     input.initialise(&window, &camera, &mainScene);
@@ -31,39 +109,7 @@ int main() {
 
     gui.initialise(window.getGLFWWindow());
 
-	Mesh cube(cubeVertices, cubeIndices);
-	Mesh pyramid(pyramidVertices, pyramidIndices);
-
-    std::string shaderPath = "../../../src/rendering/shaders/";
-    std::string texturePath = "../../../src/rendering/textures/";
-
-    Shader* defaultShader = new Shader(shaderPath + "vertexShader.vert", shaderPath + "fragmentShader.frag");
-
-    Texture brickTexture(texturePath + "brick_BC.png");
-	Texture woodTexture(texturePath + "wood_BC.png");
-
-    Material brickMaterial(defaultShader);
-    Material woodMaterial(defaultShader);
-
-    brickMaterial.addTexture("u_Texture", brickTexture);
-	woodMaterial.addTexture("u_Texture", woodTexture);
-
-    if(!brickTexture.isLoaded()) {
-        std::cerr << "Failed to load texture\n";
-		brickTexture = Texture::createFallback();
-	}
-
-	GameObject cubeObject(&cube, &brickMaterial);
-	cubeObject.setPosition(glm::vec3(-1.5f, 0.0f, 0.0f));
-	cubeObject.getModelMatrix();
-
-	GameObject pyramidObject(&pyramid, &woodMaterial);
-	pyramidObject.setPosition(glm::vec3(1.5f, 0.0f, 0.0f));
-	pyramidObject.getModelMatrix();
-
-	mainScene.setActiveCamera(&camera);
-	mainScene.addGameObject(&cubeObject);
-	mainScene.addGameObject(&pyramidObject);
+    setupResources();
 
 	Renderer renderer;
 	renderer.initialize();
@@ -72,11 +118,14 @@ int main() {
     while (!window.shouldClose()) {
         timeManager.update();
         float deltaTime = timeManager.getDeltaTime();
+
         input.processInput(deltaTime);
 
         gui.updateProfiler();
-        mainScene.update();
 
+        updateScene();
+
+        mainScene.update();
         gui.beginFrame();
         renderer.beginFrame();
         renderer.render(mainScene, window);
@@ -87,5 +136,9 @@ int main() {
         window.swapBuffers();
         window.pollEvents();
     }
+
+    delete shader3D;
+    delete defaultShader;
+
     return 0;
 }

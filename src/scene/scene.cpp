@@ -4,6 +4,9 @@ Scene::Scene() : activeCamera(nullptr), lastWindowWidth(0), lastWindowHeight(0),
 }
 
 Scene::~Scene() {
+	for (auto* obj : gameObjects) {
+		delete obj;
+	}
 }
 
 void Scene::addGameObject(GameObject* obj) {
