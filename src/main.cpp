@@ -1,14 +1,11 @@
 #include "utils/arduino/arduinoController.h"
-#include "utils/profilingUtils.h"
 #include "rendering/meshes/cubeData.h"
 #include "rendering/meshes/pyramidData.h"
 #include "rendering/renderer.h"
-#include "input/inputManager.h"
-#include "utils/timeManager.h"
+#include "core/inputManager.h"
+#include "core/timeManager.h"
+#include "gui/imGuiLayer.h"
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 
 //const char* portName = "\\\\.\\COM3"; // If your device is on COM4
 //ArduinoController arduino(portName);
@@ -29,14 +26,10 @@ int main() {
         glViewport(0, 0, w, h);
         });
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window.getGLFWWindow(), true);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    imGui gui;
+    Profiler profiler;
+
+    gui.initialise(window.getGLFWWindow());
 
 	Mesh cube(cubeVertices, cubeIndices);
 	Mesh pyramid(pyramidVertices, pyramidIndices);
@@ -74,37 +67,25 @@ int main() {
 
 	Renderer renderer;
 	renderer.initialize();
-    renderer.setClearColor(glm::vec4(0.2f, 0.3f, 0.4f, 1.0f));
-
-    Profiler profiler;
+    renderer.setClearColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
     while (!window.shouldClose()) {
         timeManager.update();
         float deltaTime = timeManager.getDeltaTime();
         input.processInput(deltaTime);
 
-        profiler.frame();
-
+        gui.updateProfiler();
         mainScene.update();
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        profiler.showOverlay();
-        ImGui::Render();
-        
+        gui.beginFrame();
         renderer.beginFrame();
         renderer.render(mainScene, window);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        gui.endFrame();
+
         renderer.endFrame();
 
         window.swapBuffers();
         window.pollEvents();
     }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
     return 0;
 }
