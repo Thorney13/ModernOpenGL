@@ -28,6 +28,7 @@ enum class RenderMode {
 };
 
 RenderMode currentMode = RenderMode::MODE_SHADERTOY;
+//RenderMode currentMode = RenderMode::MODE_3D;
 
 void static setupResources()
 {
@@ -86,12 +87,15 @@ void static setupResources()
 
 void static updateScene() {
     if (currentMode == RenderMode::MODE_3D) {
+        mainScene.update();
     }
     else {
         float totalTime = static_cast<float>(glfwGetTime());
         if (defaultShader) {
             defaultShader->setFloat("iTime", totalTime);
             defaultShader->setVec2("iResolution", glm::vec2(windowWidth, windowHeight));
+            defaultShader->setVec3("camPos", camera.getPosition());
+            defaultShader->setVec3("camTarget", camera.getFront());
         }
     }
 }
@@ -125,7 +129,6 @@ int main() {
 
         updateScene();
 
-        mainScene.update();
         gui.beginFrame();
         renderer.beginFrame();
         renderer.render(mainScene, window);
