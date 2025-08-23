@@ -20,4 +20,5 @@ public:
     void update();
     void render(float windowWidth, float windowHeight);
     void toggleProjectionMode();
+    void cleanup();
 };

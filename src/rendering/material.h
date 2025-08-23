@@ -13,4 +13,5 @@ public:
     void addTexture(const std::string& uniformName, const Texture& texture);
     void use() const;
     void setMVP(const glm::mat4& mvp);
+    void setModel(const glm::mat4& model);
 };

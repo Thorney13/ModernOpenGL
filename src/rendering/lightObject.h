@@ -2,7 +2,7 @@
 #include "utils/glIncludes.h"
 #include <vector>
 
-class Mesh {
+class lightObject {
 private:
     GLuint VAO, VBO, EBO;
     std::vector<GLfloat> vertices;
@@ -10,8 +10,8 @@ private:
     bool resourcesFreed;
 
 public:
-    Mesh(const std::vector<GLfloat>& vertices, const std::vector<unsigned int>& indices);
-    ~Mesh();
+    lightObject(const std::vector<GLfloat>& vertices, const std::vector<unsigned int>& indices);
+    ~lightObject();
     void draw() const;
     void cleanup();
 };

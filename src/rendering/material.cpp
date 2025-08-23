@@ -25,3 +25,9 @@ void Material::setMVP(const glm::mat4& mvp) {
 		shader->setMat4("mvp", mvp);
 	}
 }
+
+void Material::setModel(const glm::mat4& model) {
+	if (shader) {
+		shader->setMat4("model", model);
+	}
+}

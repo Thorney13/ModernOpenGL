@@ -1,15 +1,14 @@
 #include "utils/arduino/arduinoController.h"
-#include "rendering/meshes/cubeData.h"
+#include "rendering/meshes/cubeNormal.h"
+#include "rendering/meshes/cubeSimple.h"
 #include "rendering/meshes/pyramidData.h"
 #include "rendering/meshes/planeData.h"
 #include "rendering/renderer.h"
 #include "core/inputManager.h"
 #include "core/timeManager.h"
 #include "gui/imGuiLayer.h"
+#include "rendering/lightObject.h"
 
-
-//const char* portName = "\\\\.\\COM3"; // If your device is on COM4
-//ArduinoController arduino(portName);
 int windowWidth = 800;
 int windowHeight = 600;
 
@@ -18,6 +17,8 @@ Camera camera;
 InputManager input;
 Scene mainScene;
 TimeManager timeManager;
+GameObject* lightMain = nullptr;
+GameObject* cubeObject = nullptr;
 
 Shader* shader3D = nullptr;
 Shader* defaultShader = nullptr;
@@ -27,46 +28,37 @@ enum class RenderMode {
     MODE_SHADERTOY
 };
 
-RenderMode currentMode = RenderMode::MODE_SHADERTOY;
-//RenderMode currentMode = RenderMode::MODE_3D;
+//RenderMode currentMode = RenderMode::MODE_SHADERTOY;
+RenderMode currentMode = RenderMode::MODE_3D;
 
 void static setupResources()
 {
     if (currentMode == RenderMode::MODE_3D)
     {
         std::string shaderPath = "../../../src/rendering/shaders/";
-        std::string texturePath = "../../../src/rendering/textures/";
 
-        shader3D = new Shader(shaderPath + "vertexShader.vert", shaderPath + "fragmentShader.frag");
+        shader3D = new Shader(shaderPath + "lighting/phong.vert", shaderPath + "lighting/phong.frag");
+        defaultShader = new Shader(shaderPath + "shaderToy/default.vert", shaderPath + "shaderToy/default.frag");
 
-        Mesh* cube = new Mesh(cubeVertices, cubeIndices);
-        Mesh* pyramid = new Mesh(pyramidVertices, pyramidIndices);
-
-        Texture* brickTexture = new Texture(texturePath + "brick_BC.png");
-        Texture* woodTexture = new Texture(texturePath + "wood_BC.png");
+        Mesh* cube = new Mesh(cubeNormalVertices, cubeNormalIndices);
+        lightObject* light = new lightObject(cubeSimpleVertices, cubeSimpleIndices);
 
         Material* brickMaterial = new Material(shader3D);
-        Material* woodMaterial = new Material(shader3D);
+        Material* lightMaterial = new Material(defaultShader);
 
-        brickMaterial->addTexture("u_Texture", *brickTexture);
-        woodMaterial->addTexture("u_Texture", *woodTexture);
-
-        if (!brickTexture->isLoaded()) {
-            std::cerr << "Failed to load texture\n";
-            *brickTexture = Texture::createFallback();
-        }
-
-        GameObject* cubeObject = new GameObject(cube, brickMaterial);
-        cubeObject->setPosition(glm::vec3(-1.5f, 0.0f, 0.0f));
+        cubeObject = new GameObject(cube, brickMaterial);
+        cubeObject->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         cubeObject->getModelMatrix();
 
-        GameObject* pyramidObject = new GameObject(pyramid, woodMaterial);
-        pyramidObject->setPosition(glm::vec3(1.5f, 0.0f, 0.0f));
-        pyramidObject->getModelMatrix();
+        lightMain = new GameObject(light, lightMaterial);
+        lightMain->setPosition(glm::vec3(1.0f, 1.0f, 1.0f));
+        lightMain->setScale(glm::vec3(0.2f, 0.2f, 0.2f));
+        lightMain->getModelMatrix();
 
         mainScene.setActiveCamera(&camera);
+        mainScene.addGameObject(lightMain);
         mainScene.addGameObject(cubeObject);
-        mainScene.addGameObject(pyramidObject);
+
     }
     else
     {
@@ -88,6 +80,9 @@ void static setupResources()
 void static updateScene() {
     if (currentMode == RenderMode::MODE_3D) {
         mainScene.update();
+        shader3D->setVec3("lightPos", lightMain->getPosition());
+        shader3D->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        shader3D->setVec3("objectColor", glm::vec3(0.5f, 0.7f, 0.3f));
     }
     else {
         float totalTime = static_cast<float>(glfwGetTime());
@@ -140,8 +135,12 @@ int main() {
         window.pollEvents();
     }
 
+    mainScene.cleanup();
+    
     delete shader3D;
     delete defaultShader;
+    lightMain = nullptr;
+    cubeObject = nullptr;
 
     return 0;
 }

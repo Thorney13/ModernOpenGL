@@ -37,15 +37,14 @@ Camera* Scene::getActiveCamera() const {
 
 void Scene::update() {
 	for (auto& obj : gameObjects) {
-		if (obj) {
+		if (obj && obj->hasMesh()) {
 			float currentTime = (float)glfwGetTime();
 			float rotationSpeed = 20.0f;
 			float rotationAngle = rotationSpeed * currentTime;
 
 			obj->setRotation(glm::vec3(rotationAngle, rotationAngle, rotationAngle));
-			obj->getModelMatrix();
+			}
 		}
-	}
 }
 
 void Scene::toggleProjectionMode() {
@@ -100,5 +99,14 @@ void Scene::render(float windowWidth, float windowHeight) {
 	
 	for (auto& obj : gameObjects) {
 			obj->draw(viewProjection);
+	}
+}
+
+// Add this method to your Scene class
+void Scene::cleanup() {
+	for (auto& gameObject : gameObjects) {
+		if (gameObject) {
+			gameObject->cleanup();
+		}
 	}
 }
