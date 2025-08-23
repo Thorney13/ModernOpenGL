@@ -1,11 +1,11 @@
 #include "gameObject.h"
 
 GameObject::GameObject(Mesh* mesh, Material* material)
-	: position(0.0f), rotation(0.0f), scale(1.0f), mesh(mesh), light(nullptr), material(material) {
+	: position(0.0f), rotation(0.0f), scale(1.0f), mesh(mesh), light(nullptr), material(material), movementSpeed(2.5f) {
 }
 
 GameObject::GameObject(lightObject* light, Material* material)
-	: position(0.0f), rotation(0.0f), scale(1.0f), mesh(nullptr), light(light), material(material) {
+	: position(0.0f), rotation(0.0f), scale(1.0f), mesh(nullptr), light(light), material(material), movementSpeed(2.5f) {
 }
 
 GameObject::~GameObject() {
@@ -70,4 +70,21 @@ void GameObject::cleanup() {
 	if (light) {
 		light->cleanup();
 	}
+}
+
+void GameObject::processKeyboardInput(int direction, float deltaTime) {
+	float velocity = movementSpeed * deltaTime;
+
+	if (direction == FORWARD)
+		position += glm::vec3(0.0f, 1.0f, 0.0f) * velocity;
+	if (direction == BACKWARD)
+		position += glm::vec3(0.0f, -1.0f, 0.0f) * velocity;
+	if (direction == LEFT)
+		position += glm::vec3(-1.0f, 0.0f, 0.0f) * velocity;
+	if (direction == RIGHT)
+		position += glm::vec3(1.0f, 0.0f, 0.0f) * velocity;
+	if (direction == UP)
+		position += glm::vec3(0.0f, 0.0f, -1.0f) * velocity;
+	if (direction == DOWN)
+		position += glm::vec3(0.0f, 0.0f, 1.0f) * velocity;
 }

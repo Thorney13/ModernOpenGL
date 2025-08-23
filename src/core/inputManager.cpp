@@ -3,7 +3,7 @@
 InputManager* InputManager::instance = nullptr;
 
 InputManager::InputManager()
-	: window(nullptr), camera(nullptr), scene(nullptr), firstMouse(false), rightMousePressed(false),
+	: window(nullptr), camera(nullptr), scene(nullptr), object(nullptr), firstMouse(false), rightMousePressed(false),
 	lastX(0), lastY(0), deltaTime(0)
 {
     instance = this;
@@ -38,11 +38,12 @@ void InputManager::keyCallback(GLFWwindow* window, int key, int scancode, int ac
     }
 }
 
-void InputManager::initialise(Window* window, Camera* camera, Scene* scene)
+void InputManager::initialise(Window* window, Camera* camera, Scene* scene, GameObject* object)
 {
     this->window = window;
     this->camera = camera;
     this->scene = scene;
+    this->object = object;
 
     window->setMouseButtonCallback(mouseButtonCallback);
     window->setCursorPosCallback(cursorPositionCallback);
@@ -67,6 +68,20 @@ void InputManager::processInput(float deltaTime) {
         camera->processKeyboardInput(Camera::UP, deltaTime);
     if (glfwGetKey(glfwWindow, GLFW_KEY_Q) == GLFW_PRESS)
         camera->processKeyboardInput(Camera::DOWN, deltaTime);
+
+    if (glfwGetKey(glfwWindow, GLFW_KEY_UP) == GLFW_PRESS)
+        object->processKeyboardInput(GameObject::FORWARD, deltaTime);
+    if (glfwGetKey(glfwWindow, GLFW_KEY_DOWN) == GLFW_PRESS)
+        object->processKeyboardInput(GameObject::BACKWARD, deltaTime);
+    if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT) == GLFW_PRESS)
+        object->processKeyboardInput(GameObject::LEFT, deltaTime);
+    if (glfwGetKey(glfwWindow, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        object->processKeyboardInput(GameObject::RIGHT, deltaTime);
+    if (glfwGetKey(glfwWindow, GLFW_KEY_COMMA) == GLFW_PRESS)
+        object->processKeyboardInput(GameObject::UP, deltaTime);
+    if (glfwGetKey(glfwWindow, GLFW_KEY_PERIOD) == GLFW_PRESS)
+        object->processKeyboardInput(GameObject::DOWN, deltaTime);
+
 }
 
 void InputManager::handleMouseButton(int button, int action, int mods) {

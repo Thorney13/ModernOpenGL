@@ -97,7 +97,10 @@ void static updateScene() {
 
 int main() {
     window.initialise();
-    input.initialise(&window, &camera, &mainScene);
+
+    setupResources();
+
+    input.initialise(&window, &camera, &mainScene, lightMain);
 
     window.setResizeCallback([](int w, int h) {
         glViewport(0, 0, w, h);
@@ -107,8 +110,6 @@ int main() {
     Profiler profiler;
 
     gui.initialise(window.getGLFWWindow());
-
-    setupResources();
 
 	Renderer renderer;
 	renderer.initialize();

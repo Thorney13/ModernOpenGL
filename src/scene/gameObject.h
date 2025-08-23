@@ -11,6 +11,7 @@ private:
     Mesh* mesh;
     lightObject* light;
     Material* material;
+    float movementSpeed;
 
 public:
     GameObject(Mesh* mesh, Material* material);
@@ -24,7 +25,18 @@ public:
     void draw(const glm::mat4& viewProjection) const;
     bool hasMesh() const { return mesh != nullptr; }
     bool hasLight() const { return light != nullptr; }
+    void processKeyboardInput(int direction, float deltaTime);
 
     glm::vec3 getPosition() const { return position; }
     glm::mat4 getModelMatrix() const;
+
+
+    enum objectMovement {
+        FORWARD,
+        BACKWARD,
+        LEFT,
+        RIGHT,
+        UP,
+        DOWN
+    };
 };

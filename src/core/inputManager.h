@@ -2,12 +2,14 @@
 #include "core/window.h"
 #include "scene/camera.h"
 #include "scene/scene.h"
+#include "scene/gameObject.h"
 
 class InputManager {
 private:
 	Window* window;
 	Camera* camera;
 	Scene* scene;
+	GameObject* object;
 
 	bool firstMouse;
 	bool rightMousePressed;
@@ -25,7 +27,7 @@ public:
 	InputManager();
 	~InputManager();
 
-	void initialise(Window* window, Camera* camera, Scene* scene);
+	void initialise(Window* window, Camera* camera, Scene* scene, GameObject* object);
 
 	void processInput(float deltaTime);
 
