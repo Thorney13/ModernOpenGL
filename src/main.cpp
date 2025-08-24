@@ -1,7 +1,5 @@
-#include "utils/arduino/arduinoController.h"
 #include "rendering/meshes/cubeNormal.h"
 #include "rendering/meshes/cubeSimple.h"
-#include "rendering/meshes/pyramidData.h"
 #include "rendering/meshes/planeData.h"
 #include "rendering/renderer.h"
 #include "core/inputManager.h"
@@ -83,6 +81,7 @@ void static updateScene() {
         shader3D->setVec3("lightPos", lightMain->getPosition());
         shader3D->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
         shader3D->setVec3("objectColor", glm::vec3(0.5f, 0.7f, 0.3f));
+        shader3D->setVec3("viewPos", camera.getPosition());
     }
     else {
         float totalTime = static_cast<float>(glfwGetTime());
