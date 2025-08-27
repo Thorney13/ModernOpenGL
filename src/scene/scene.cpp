@@ -37,7 +37,7 @@ Camera* Scene::getActiveCamera() const {
 
 void Scene::update() {
 	for (auto& obj : gameObjects) {
-		if (obj && obj->hasMesh()) {
+		if (obj && obj->shouldAutoRotate()) {
 			float currentTime = (float)glfwGetTime();
 			float rotationSpeed = 20.0f;
 			float rotationAngle = rotationSpeed * currentTime;

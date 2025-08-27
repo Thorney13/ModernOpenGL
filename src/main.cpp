@@ -6,6 +6,7 @@
 #include "core/timeManager.h"
 #include "gui/imGuiLayer.h"
 #include "rendering/lightObject.h"
+#include "rendering/mesh.h"
 
 int windowWidth = 800;
 int windowHeight = 600;
@@ -46,12 +47,11 @@ void static setupResources()
 
         cubeObject = new GameObject(cube, brickMaterial);
         cubeObject->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-        cubeObject->getModelMatrix();
+        cubeObject->setAutoRotate(true);
 
         lightMain = new GameObject(light, lightMaterial);
         lightMain->setPosition(glm::vec3(1.0f, 1.0f, 1.0f));
         lightMain->setScale(glm::vec3(0.2f, 0.2f, 0.2f));
-        lightMain->getModelMatrix();
 
         mainScene.setActiveCamera(&camera);
         mainScene.addGameObject(lightMain);

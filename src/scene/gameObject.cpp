@@ -1,22 +1,13 @@
 #include "gameObject.h"
 
-GameObject::GameObject(Mesh* mesh, Material* material)
-	: position(0.0f), rotation(0.0f), scale(1.0f), mesh(mesh), light(nullptr), material(material), movementSpeed(2.5f) {
-}
-
-GameObject::GameObject(lightObject* light, Material* material)
-	: position(0.0f), rotation(0.0f), scale(1.0f), mesh(nullptr), light(light), material(material), movementSpeed(2.5f) {
+GameObject::GameObject(Object* renderObject, Material* material)
+	: position(0.0f), rotation(0.0f), scale(1.0f), renderObject(renderObject), material(material), movementSpeed(2.5f), shouldRotate(false) {
 }
 
 GameObject::~GameObject() {
-	if (mesh) {
-		delete mesh;
-		mesh = nullptr;
-	}
-
-	if (light) {
-		delete light;
-		light = nullptr;
+	if (renderObject) {
+		delete renderObject;
+		renderObject = nullptr;
 	}
 
 	if (material) {
@@ -48,27 +39,19 @@ glm::mat4 GameObject::getModelMatrix() const {
 }
 
 void GameObject::draw(const glm::mat4& viewProjection) const {
-	if (material) {
+	if (material && renderObject) {
 		material->use();
 		glm::mat4 modelMatrix = getModelMatrix();
 		material->setMVP(viewProjection * getModelMatrix());
 		material->setModel(modelMatrix);
 
-		if (mesh) {
-			mesh->draw();
-		}
-		else if (light) {
-			light->draw();
-		}
+		renderObject->draw();
 	}
 }
 
 void GameObject::cleanup() {
-	if (mesh) {
-		mesh->cleanup();
-	}
-	if (light) {
-		light->cleanup();
+	if (renderObject) {
+		renderObject->cleanup();
 	}
 }
 

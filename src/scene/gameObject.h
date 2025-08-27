@@ -1,21 +1,19 @@
 #pragma once
 #include "rendering/material.h"
-#include "rendering/mesh.h"
-#include "rendering/lightObject.h"
+#include "rendering/Object.h"
 
 class GameObject {
 private:
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
-    Mesh* mesh;
-    lightObject* light;
+    Object* renderObject;
     Material* material;
     float movementSpeed;
+    bool shouldRotate;
 
 public:
-    GameObject(Mesh* mesh, Material* material);
-    GameObject(lightObject* light, Material* material);
+    GameObject(Object* renderObject, Material* material);
     ~GameObject();
 
     void setPosition(const glm::vec3& pos);
@@ -23,12 +21,17 @@ public:
     void setScale(const glm::vec3& scale);
     void cleanup();
     void draw(const glm::mat4& viewProjection) const;
-    bool hasMesh() const { return mesh != nullptr; }
-    bool hasLight() const { return light != nullptr; }
+
+    template<typename T>
+    T* getObjectAs() { return dynamic_cast<T*>(renderObject); }
+
     void processKeyboardInput(int direction, float deltaTime);
 
     glm::vec3 getPosition() const { return position; }
     glm::mat4 getModelMatrix() const;
+
+    bool shouldAutoRotate() const { return shouldRotate; }
+    void setAutoRotate(bool rotate) { shouldRotate = rotate; }
 
 
     enum objectMovement {

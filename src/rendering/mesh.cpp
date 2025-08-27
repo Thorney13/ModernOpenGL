@@ -9,7 +9,6 @@ Mesh::Mesh(const std::vector<GLfloat>& vertices, const std::vector<GLuint>& indi
 	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
-
 }
 
 Mesh::~Mesh() {
