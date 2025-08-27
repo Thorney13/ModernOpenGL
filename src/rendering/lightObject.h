@@ -1,17 +1,8 @@
 #pragma once
-#include "utils/glIncludes.h"
-#include <vector>
+#include "object.h"
 
-class lightObject {
-private:
-    GLuint VAO, VBO, EBO;
-    std::vector<GLfloat> vertices;
-    std::vector<GLuint> indices;
-    bool resourcesFreed;
-
+class lightObject : public Object {
 public:
     lightObject(const std::vector<GLfloat>& vertices, const std::vector<unsigned int>& indices);
-    ~lightObject();
-    void draw() const;
-    void cleanup();
+    ~lightObject() override;
 };

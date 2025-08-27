@@ -36,6 +36,7 @@ add_executable(ModernOpenGL
     src/core/timeManager.cpp
     src/gui/imGuiLayer.cpp
     src/rendering/lightObject.cpp
+    src/rendering/object.cpp
 
     external/serialPort/serialPort.cpp
     external/imgui/imgui.cpp
@@ -45,7 +46,7 @@ add_executable(ModernOpenGL
     external/imgui/imgui_widgets.cpp
     external/imgui/backends/imgui_impl_opengl3.cpp
     external/imgui/backends/imgui_impl_glfw.cpp
-   )
+)
 
 add_definitions(-DGLFW_INCLUDE_NONE)
 

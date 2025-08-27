@@ -1,17 +1,9 @@
 #pragma once
-#include "utils/glIncludes.h"
-#include <vector>
+#include "object.h"
 
-class Mesh {
-private:
-    GLuint VAO, VBO, EBO;
-    std::vector<GLfloat> vertices;
-    std::vector<GLuint> indices;
-    bool resourcesFreed;
-
+class Mesh : public Object {
 public:
     Mesh(const std::vector<GLfloat>& vertices, const std::vector<unsigned int>& indices);
-    ~Mesh();
-    void draw() const;
-    void cleanup();
+    ~Mesh() override;
+    void draw() const override;
 };
