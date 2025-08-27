@@ -1,19 +1,10 @@
 #include "gameObject.h"
 
-GameObject::GameObject(Object* renderObject, Material* material)
+GameObject::GameObject(std::shared_ptr<Object> renderObject, std::shared_ptr<Material> material)
 	: position(0.0f), rotation(0.0f), scale(1.0f), renderObject(renderObject), material(material), movementSpeed(2.5f), shouldRotate(false) {
 }
 
 GameObject::~GameObject() {
-	if (renderObject) {
-		delete renderObject;
-		renderObject = nullptr;
-	}
-
-	if (material) {
-		delete material;
-		material = nullptr;
-	}
 }
 
 void GameObject::setPosition(const glm::vec3& pos) {

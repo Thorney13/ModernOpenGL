@@ -4,18 +4,15 @@ Scene::Scene() : activeCamera(nullptr), lastWindowWidth(0), lastWindowHeight(0),
 }
 
 Scene::~Scene() {
-	for (auto* obj : gameObjects) {
-		delete obj;
-	}
 }
 
-void Scene::addGameObject(GameObject* obj) {
+void Scene::addGameObject(std::shared_ptr<GameObject> obj) {
 	if (obj) {
 		gameObjects.push_back(obj);
 	}
 }
 
-void Scene::removeGameObject(GameObject* obj) {
+void Scene::removeGameObject(std::shared_ptr<GameObject> obj) {
 	auto it = std::find(gameObjects.begin(), gameObjects.end(), obj);
 	if (it != gameObjects.end()) {
 		gameObjects.erase(it);

@@ -1,19 +1,20 @@
 #pragma once
 #include "rendering/material.h"
 #include "rendering/Object.h"
+#include <memory>
 
 class GameObject {
 private:
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
-    Object* renderObject;
-    Material* material;
+    std::shared_ptr<Object> renderObject;
+    std::shared_ptr<Material> material;
     float movementSpeed;
     bool shouldRotate;
 
 public:
-    GameObject(Object* renderObject, Material* material);
+    GameObject(std::shared_ptr<Object> renderObject, std::shared_ptr<Material> material);
     ~GameObject();
 
     void setPosition(const glm::vec3& pos);
@@ -23,7 +24,7 @@ public:
     void draw(const glm::mat4& viewProjection) const;
 
     template<typename T>
-    T* getObjectAs() { return dynamic_cast<T*>(renderObject); }
+    std::shared_ptr<T> getObjectAs() { return std::dynamic_pointer_cast<T>(renderObject); }
 
     void processKeyboardInput(int direction, float deltaTime);
 

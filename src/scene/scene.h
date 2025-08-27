@@ -1,10 +1,11 @@
 #pragma once
 #include "scene/gameObject.h"
 #include "scene/camera.h"
+#include <memory>
 
 class Scene {
 private:
-    std::vector<GameObject*> gameObjects;
+    std::vector<std::shared_ptr<GameObject>> gameObjects;
     Camera* activeCamera;
     float lastWindowWidth, lastWindowHeight;
     bool usePerspectiveProjection;
@@ -13,8 +14,8 @@ public:
 	Scene();
 	~Scene();
 
-    void addGameObject(GameObject* obj);
-    void removeGameObject(GameObject* obj);
+    void addGameObject(std::shared_ptr<GameObject> obj);
+    void removeGameObject(std::shared_ptr<GameObject> obj);
     void setActiveCamera(Camera* camera);
     Camera* getActiveCamera() const;
     void update();

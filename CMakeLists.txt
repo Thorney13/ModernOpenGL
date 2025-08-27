@@ -35,8 +35,9 @@ add_executable(ModernOpenGL
     src/core/inputManager.cpp
     src/core/timeManager.cpp
     src/gui/imGuiLayer.cpp
-    src/rendering/lightObject.cpp
+    "src/rendering/light.cpp"
     src/rendering/object.cpp
+    src/core/resourceManager.cpp
 
     external/serialPort/serialPort.cpp
     external/imgui/imgui.cpp
